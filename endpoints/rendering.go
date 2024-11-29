@@ -21,11 +21,7 @@ import (
 // const supportedPlatforms = ['standalonewindows', 'android', 'ios'].filter(p => jsonData.unityPackages?.some(up => up.platform === p))
 // const searchBox = document.querySelector('input[type="text"]');
 // jsonData.cacheTime = new Date(jsonData.cacheTime);
-// // <img
-// // 		src="api/avatars/thumbnail?id=${jsonData.id}"
-// // 		alt="Avatar Thumbnail"
-// // 		className="w-full h-full object-cover"
-// // />
+
 // let card = `<div class="w-full sm:w-1/3 md:w-1/5 lg:w-1/7 px-4 mb-8" style="visibility: hidden;">
 //
 //	       <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:scale-105"">
@@ -86,7 +82,11 @@ var cardTemplate = `
 <div class="w-full sm:w-1/3 md:w-1/5 lg:w-1/7 px-4 mb-8" style="visibility: %s; display: %s;">
         <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:scale-105"">
             <div class="aspect-[4/3] relative">
-				o~o
+				 <img
+				 		src="api/avatars/thumbnail?id=%s"
+				 		alt="Avatar Thumbnail"
+				 		className="w-full h-full object-cover"
+				 />
             </div>
             <div class="p-4">
                 <a>
@@ -155,6 +155,7 @@ func RenderAvatar(avatar avatars.Avatar, filter string) (bool, string, error) {
 	card := fmt.Sprintf(cardTemplate,
 		visibility,
 		display,
+		avatar.Id,
 		avatar.Name,
 		avatar.AuthorName,
 		strings.Join(supportedPlatforms, " | "),
