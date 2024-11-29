@@ -9,7 +9,9 @@ import (
 	webview "github.com/webview/webview_go"
 	"math/rand"
 	"net/http"
+	"os"
 	"runtime"
+	"slices"
 	"strconv"
 	"syscall"
 	"unsafe"
@@ -52,7 +54,7 @@ func main() {
 	}()
 	randomPort := rand.Intn(65535-49152) + 4915
 	go endpoints.StartServer(randomPort)
-	w := webview.New(false)
+	w := webview.New(slices.Contains(os.Args, "--debug"))
 	w.SetSize(400, 200, webview.HintMin)
 	defer w.Destroy()
 	w.Window()

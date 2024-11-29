@@ -85,7 +85,7 @@ var cardTemplate = `
 				 <img
 				 		src="api/avatars/thumbnail?id=%s"
 				 		alt="Avatar Thumbnail"
-				 		className="w-full h-full object-cover"
+				 		style="object-fit: cover; width: 100%%; height: 100%%;"
 				 />
             </div>
             <div class="p-4">
@@ -168,11 +168,15 @@ func RenderAvatar(avatar avatars.Avatar, filter string) (bool, string, error) {
 
 var Filter = ""
 
-func RenderAvatars(avatars []avatars.Avatar, filter string) (string, int) {
+func RenderAvatars(avatarsV []avatars.Avatar, filter string) (string, int) {
+	slices.SortFunc(avatarsV, func(a, b avatars.Avatar) int {
+		return int(b.CacheTime.Unix() - a.CacheTime.Unix())
+	})
+
 	fmt.Println("Rendering avatars...")
 	var innerHTML string
 	visibleAvatars := 0
-	for _, avatar := range avatars {
+	for _, avatar := range avatarsV {
 		visible, html, err := RenderAvatar(avatar, filter)
 		if err != nil {
 			fmt.Println(err)
