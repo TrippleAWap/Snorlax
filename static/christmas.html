@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Christmas Snorlax</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch("/api/user").then(r => r.json()).then(data => {
+                document.querySelector('#user-name').innerHTML = data.displayName;
+            }).catch(e => console.error(e));
+
+            const socket = new WebSocket(`ws://${document.URL.split("/")[2]}/`)
+            socket.onmessage = (event) => {
+                const { eventId, data } = JSON.parse(event.data);
+                switch (eventId) {
+                    case "avatars":
+                        const [innerHtml, visibleCards, totalCards] = data;
+                        document.querySelector('#cards').innerHTML = innerHtml;
+                        document.querySelector('#avatar-visible-count').innerHTML = visibleCards.toString();
+                        document.querySelector('#avatar-count').innerHTML = totalCards.toString();
+                        break;
+                    default:
+                        console.error(`Unknown eventId: ${eventId}`, data);
+                }
+            }
+
+            socket.onerror = (error) => {
+                console.error('Socket error', error);
+                document.querySelector('#error-display').style.display = 'block';
+                document.querySelector('#error-message').textContent = 'Socket error'
+            }
+
+            const searchBox = document.querySelector('input[type="text"]');
+            // check if cards has been updated;
+            // on enter;
+            searchBox.addEventListener('keyup', async (event) => {
+                if (event.keyCode === 13) {
+                    console.log('searching for', searchBox.value);
+                    const [innerHtml, visibleCards, totalCards] = await updateFilter(searchBox.value);
+                    document.querySelector('#cards').innerHTML = innerHtml;
+                    document.querySelector('#avatar-visible-count').innerHTML = visibleCards.toString();
+                    document.querySelector('#avatar-count').innerHTML = totalCards.toString();
+                }
+            });
+        })
+    </script>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #dadada, #807f7f);
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: #fff;
+            overflow-y: auto;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .bg-red {
+            background-color: #c62828;
+        }
+
+        .bg-green {
+            background-color: #2e7d32;
+        }
+
+        .snowflake {
+            position: fixed;
+            top: -10%;
+            font-size: 1.5rem;
+            color: white;
+            opacity: 0.8;
+            animation: fall infinite linear;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-10%) translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(110vh) translateX(-50%) rotate(360deg);
+                opacity: 0.3;
+            }
+        }
+
+        .snow-container .snowflake:nth-child(1) {
+            left: 10%;
+            animation-duration: 10s;
+            animation-delay: 0s;
+        }
+
+        .snow-container .snowflake:nth-child(2) {
+            left: 20%;
+            animation-duration: 12s;
+            animation-delay: 0s;
+        }
+
+        .snow-container .snowflake:nth-child(3) {
+            left: 30%;
+            animation-duration: 14s;
+            animation-delay: 0s;
+        }
+
+        .snow-container .snowflake:nth-child(4) {
+            left: 40%;
+            animation-duration: 10s;
+            animation-delay: 0s;
+        }
+
+        .snow-container .snowflake:nth-child(5) {
+            left: 50%;
+            animation-duration: 12s;
+            animation-delay: 0s;
+        }
+
+        .snow-container .snowflake:nth-child(6) {
+            left: 60%;
+            animation-duration: 16s;
+            animation-delay: 0s;
+        }
+
+        .snow-container .snowflake:nth-child(7) {
+            left: 70%;
+            animation-duration: 11s;
+            animation-delay: 0s;
+        }
+
+        .snow-container .snowflake:nth-child(8) {
+            left: 80%;
+            animation-duration: 13s;
+            animation-delay: 0s;
+        }
+
+        .snow-container .snowflake:nth-child(9) {
+            left: 90%;
+            animation-duration: 15s;
+            animation-delay: 0s;
+        }
+
+        .card {
+            position: relative;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.5), rgba(15, 15, 15, 0.8));
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.7), 0 0 15px 8px rgba(255, 0, 0, 0.7);
+            transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        .card:hover {
+            box-shadow: 0 0 20px 6px rgba(0, 255, 0, 0.7), 0 0 20px 12px rgba(0, 255, 21, 0.7);
+            transform: scale(1.05);
+        }
+
+        .card-title {
+            font-family: 'Lobster', cursive;
+            color: #ffcc00;
+        }
+
+        button {
+            background: linear-gradient(to right, #ff0000, #ff5722);
+            font-weight: bold;
+            transition: background 0.3s ease-in-out;
+        }
+
+        button:hover {
+            background: linear-gradient(to right, #2e7d32, #66bb6a);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+        }
+
+        footer p {
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: #ffcc00;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+<!-- Section: Animated Snowflakes -->
+<div class="snow-container">
+    <div class="snowflake">❄</div>
+    <div class="snowflake">❄</div>
+    <div class="snowflake">❄</div>
+    <div class="snowflake">❄</div>
+    <div class="snowflake">❄</div>
+    <div class="snowflake">❄</div>
+    <div class="snowflake">❄</div>
+    <div class="snowflake">❄</div>
+    <div class="snowflake">❄</div>
+</div>
+
+<!-- Section: Header -->
+<div class="relative bg-red py-5">
+    <div class="text-center">
+        <img src="https://files.catbox.moe/anjy4a.png" alt="Logo" class="mx-auto w-24 h-24">
+        <h1 class="text-4xl font-bold text-white mt-2">Snorlax</h1>
+    </div>
+
+    <!-- User Info -->
+    <p class="absolute top-5 right-5 text-gray-300 text-sm">
+        Logged in as <span style="font-weight: bold; color: #00ff15;" id="user-name">Unknown</span>
+    </p>
+
+    <!-- Search Filter -->
+    <div class="flex items-center w-3/4 mx-auto mt-5 space-x-2">
+        <i class="fa fa-search text-white text-lg"></i>
+        <input type="text" placeholder="Filter by text"
+               class="bg-green text-white py-2 px-4 rounded-lg w-full text-sm outline-none">
+        <p class="text-white text-sm">Showing <span id="avatar-visible-count">0</span>/<span
+                id="avatar-count">0</span></p>
+    </div>
+</div>
+
+<!-- Section: Avatar Cards -->
+<div class="flex flex-wrap items-center justify-center -mx-0 mt-5" id="cards">
+</div>
+</body>
+</html>

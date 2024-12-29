@@ -41,7 +41,7 @@ func (c *Client) NewRequest(method, url string, body io.Reader) (*http.Request, 
 	for k, v := range DefaultHeaders {
 		req.Header.Set(k, v)
 	}
-	req.Header.Set("Cookie", fmt.Sprintf("auth=%s; twoFactorAuth=%s", c.Config.AuthCookie, c.Config.TwoFactorAuth))
+	req.Header.Set("Cookie", fmt.Sprintf("auth=%s", c.Config.AuthCookie))
 	return req, nil
 }
 func (c *Client) Do(req *http.Request) (*http.Response, error) {

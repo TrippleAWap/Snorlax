@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 )
 
@@ -54,11 +55,7 @@ func init() {
 				avatarIds = append(avatarIds, id)
 			}
 
-			database, err := RejectDatabase.GetCachedAvatars()
-			if err != nil {
-				panic(err)
-			}
-			var avatarMap map[string]avatars.Avatar
+			avatarMap := map[string]avatars.Avatar{}
 
 			fmt.Println("Fetching avatars...")
 			avatarMap, err = GetAvatars(avatarIds)
@@ -79,15 +76,23 @@ func init() {
 				AvatarsV = append(AvatarsV, avatar)
 			}
 
-			go func(avatarsV []avatars.Avatar) {
+			go func() {
+				database, err := RejectDatabase.GetCachedAvatars()
+				if err != nil {
+					return
+				}
 				totalAdded := 0
-			grr:
-				for _, avatar := range avatarsV {
-					for _, dbAvatar := range database {
-						if avatar.Id == dbAvatar.Id {
-							continue grr
+				var uniqueAvatars []avatars.Avatar
+			findUnique:
+				for _, avatar := range AvatarsV {
+					for _, cachedAvatar := range database {
+						if cachedAvatar.Id == avatar.Id {
+							continue findUnique
 						}
 					}
+					uniqueAvatars = append(uniqueAvatars, avatar)
+				}
+				for _, avatar := range uniqueAvatars {
 					if err := RejectDatabase.AddAvatar(avatar, GlobalUser.DisplayName); err != nil {
 						log.Println("add avatar to database failed: ", err)
 						continue
@@ -95,10 +100,17 @@ func init() {
 					totalAdded++
 				}
 				log.Printf("Succesfully added %d avatars to the Reject database!\n", totalAdded)
-			}(AvatarsV)
+			}()
+
+			slices.SortFunc(AvatarsV, func(a, b avatars.Avatar) int {
+				return int(b.CacheTime.Unix() - a.CacheTime.Unix())
+			})
 
 			html, visibleCount := RenderAvatars(AvatarsV, Filter)
-			data := []interface{}{html, visibleCount, len(AvatarsV)}
+			cards := strings.SplitAfter(html, `            </div>
+        </div>
+    </div>`)
+			data := []interface{}{strings.Join(cards[:min(len(cards), 1000)], ""), visibleCount, len(AvatarsV)}
 			if err := conn.WriteJSON(EventType{"avatars", data}); err != nil {
 				log.Println("write json failed: ", err)
 				return

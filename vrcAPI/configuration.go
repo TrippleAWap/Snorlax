@@ -8,11 +8,7 @@ import (
 )
 
 type Configuration struct {
-	// AuthCookie is the name of the cookie used for authentication.
-	AuthCookie    string `json:"auth_cookie"`
-	TwoFactorAuth string `json:"twoFactorAuth"`
-	// BatchingSize is the maximum number of events per thread.
-	BatchingSize int `json:"batching_size"`
+	AuthCookie string `json:"auth_cookie"`
 }
 
 var (
@@ -35,9 +31,7 @@ func ReadConfig() (*Configuration, error) {
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			defaultConfig := Configuration{
-				AuthCookie:    "auth_cookie",
-				TwoFactorAuth: "",
-				BatchingSize:  10,
+				AuthCookie: "auth_cookie",
 			}
 
 			bytes, err := json.MarshalIndent(defaultConfig, "", "  ")

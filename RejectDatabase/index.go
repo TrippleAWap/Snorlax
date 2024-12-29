@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 const (
@@ -22,7 +23,25 @@ type CachedAvatar struct {
 	Username     string `json:"username"`
 }
 
+func init() {
+	go func() {
+		for {
+			_, err := GetCachedAvatars()
+			if err != nil {
+				fmt.Println("Failed to get cached avatars:", err)
+			}
+			time.Sleep(time.Minute*5 + time.Second)
+		}
+	}()
+}
+
+var cachedDatabase []CachedAvatar
+var lastCached time.Time
+
 func GetCachedAvatars() ([]CachedAvatar, error) {
+	if time.Since(lastCached) < time.Minute*5 {
+		return cachedDatabase, nil
+	}
 	req, err := http.NewRequest("GET", API_ENDPOINT+"/avatars", nil)
 	if err != nil {
 		return nil, err
@@ -40,19 +59,26 @@ func GetCachedAvatars() ([]CachedAvatar, error) {
 	if err != nil {
 		return nil, fmt.Errorf("GetCachedAvatars: failed to decode response: %w | %s", err, string(bytesV))
 	}
+	lastCached = time.Now()
+	cachedDatabase = cachedAvatars
 	return cachedAvatars, nil
 }
 
-// AddAvatar TODO: implement function to add new avatar to the database
 func AddAvatar(avatar avatars.Avatar, username string) error {
+	for _, cachedAvatar := range cachedDatabase {
+		if cachedAvatar.Id == avatar.Id {
+			return fmt.Errorf("AddAvatar: avatar already exists in cache: %s", cachedAvatar.Id)
+		}
+	}
 	entry := CachedAvatar{
 		DataFilePath: avatar.CacheId,
 		Id:           avatar.Id,
 		Name:         avatar.Name,
 		Status:       "active",
-		Timestamp:    avatar.CacheTime.Format("2006-01-02 15:04:05"),
+		Timestamp:    avatar.CacheTime.String(),
 		Username:     username,
 	}
+	cachedDatabase = append(cachedDatabase, entry)
 	data, err := json.Marshal(entry)
 	if err != nil {
 		return err

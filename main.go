@@ -3,55 +3,85 @@ package main
 
 import (
 	"Snorlax/endpoints"
+	"Snorlax/utils"
 	"Snorlax/vrcAPI"
 	"Snorlax/vrcAPI/auth"
+	"Snorlax/vrcAPI/avatars"
 	"fmt"
 	webview "github.com/webview/webview_go"
+	"io"
 	"math/rand"
 	"net/http"
 	"os"
-	"runtime"
+	"path"
 	"slices"
 	"strconv"
-	"syscall"
-	"unsafe"
+	"strings"
+	"time"
 )
 
-type SHFILEINFOA struct {
-	hIcon         uintptr
-	iIcon         int32
-	dwAttributes  int16
-	szDisplayName [syscall.MAX_PATH]byte
-	szTypeName    [80]byte
+func getFile(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("HTTP status code %d", resp.StatusCode)
+	}
+	defer resp.Body.Close()
+	return io.ReadAll(resp.Body)
+}
+
+func SpawnProcess(exeRelativePath string, args ...string) error {
+	attr := &os.ProcAttr{
+		Dir:   os.Getenv("CWD"),
+		Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
+	}
+	_, err := os.StartProcess(exeRelativePath, args, attr)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func main() {
-	defer func() {
-		if r := recover(); r != nil {
-			// spawn message box with error message
-			user32 := syscall.NewLazyDLL("user32.dll")
-			MessageBox := user32.NewProc("MessageBoxW")
-
-			stackBuf := make([]byte, 2048)
-			stackSize := runtime.Stack(stackBuf, true)
-
-			message := fmt.Sprintf("Panic Occured: %v\n\n%s", r, stackBuf[:stackSize])
-			title := "Whoops, something went wrong!"
-
-			titlePtr, _ := syscall.UTF16PtrFromString(title)
-			messagePtr, _ := syscall.UTF16PtrFromString(message)
-
-			_, _, err := MessageBox.Call(
-				0,
-				uintptr(unsafe.Pointer(messagePtr)),
-				uintptr(unsafe.Pointer(titlePtr)),
-				0x00000010,
-			)
-			if err != nil && err.Error() != "The operation completed successfully." {
-				panic(err)
+	if !slices.Contains(os.Args, "--launch") {
+		if _, err := os.Stat("./update.exe"); os.IsNotExist(err) {
+			fmt.Println("No update.exe found, downloading...")
+			file, err := getFile("https://github.com/TrippleAWap/SnorlaxReleases/blob/main/update.exe?raw=true")
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			err = os.WriteFile("update.exe", file, 0777)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
 			}
 		}
-	}()
+		cwd, err := os.Getwd()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		updatePath := path.Join(cwd, "update.exe")
+		fmt.Println("Running", updatePath)
+
+		err = SpawnProcess("C:\\Windows\\System32\\cmd.exe", "/c", updatePath, os.Args[0])
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
+
+	pathV, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(pathV)
+	defer utils.PanicHandler()
+	//PrismicDatabase.GetDatabase()
 	randomPort := rand.Intn(65535-49152) + 4915
 	go endpoints.StartServer(randomPort)
 	w := webview.New(slices.Contains(os.Args, "--debug"))
@@ -61,9 +91,29 @@ func main() {
 
 	for k, v := range map[string]interface{}{
 		"updateFilter": func(filter string) []interface{} {
-			endpoints.Filter = filter
+			endpoints.Filter = strings.ToLower(filter)
+			slices.SortFunc(endpoints.AvatarsV, func(a, b avatars.Avatar) int {
+				return int(b.CacheTime.Unix() - a.CacheTime.Unix())
+			})
+
 			innerHtml, visibleAvatars := endpoints.RenderAvatars(endpoints.AvatarsV, filter)
-			return []interface{}{innerHtml, visibleAvatars, len(endpoints.AvatarsV)}
+			cards := strings.SplitAfter(innerHtml, `            </div>
+        </div>
+    </div>`)
+			return []interface{}{strings.Join(cards[:min(len(cards), 1000)], ""), visibleAvatars, len(endpoints.AvatarsV)}
+		},
+		"updateFavoritesOnly": func(b bool) {
+			endpoints.FavoritesOnly = b
+		},
+		"favoriteAvatar": func(avatarId string, favorite bool) {
+			if favorite {
+				endpoints.CachedIdToFavorites[avatarId] = true
+			} else {
+				delete(endpoints.CachedIdToFavorites, avatarId)
+			}
+			if err := endpoints.CacheV.Set("CachedIdToFavorites", endpoints.CachedIdToFavorites); err != nil {
+				panic(err)
+			}
 		},
 	} {
 		if err := w.Bind(k, v); err != nil {
@@ -72,6 +122,7 @@ func main() {
 	}
 
 	w.Dispatch(func() {
+		defer utils.PanicHandler()
 		configV, err := vrcAPI.ReadConfig()
 		if err != nil {
 			panic(err)
@@ -82,13 +133,21 @@ func main() {
 		}
 		user, err := auth.User(&endpoints.GlobalClient)
 		if err != nil {
-			panic(err)
+			w.Navigate("https://vrchat.com/home/login")
+			w.Init(``)
+		}
+		for user == nil {
+			time.Sleep(time.Second)
+			user, err = auth.User(&endpoints.GlobalClient)
+			if err != nil {
+				panic(err)
+			}
 		}
 		endpoints.GlobalUser = user
 		fmt.Printf("Logged in as %s\n", user.DisplayName)
 		w.Navigate("http://127.0.0.1:" + strconv.Itoa(randomPort) + "/home")
 	})
 
-	w.SetTitle("Snorlax » github.com/TrippleAWap » Release v1.0.0")
+	w.SetTitle("Snorlax » github.com/TrippleAWap")
 	w.Run()
 }

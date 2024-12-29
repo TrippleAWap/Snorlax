@@ -7,12 +7,8 @@ import (
 	"net/http"
 )
 
-var cachedThumbnails = make(map[string][]byte)
-
 func init() {
 	RegisterEndpoint("api/avatars/thumbnail", func(w http.ResponseWriter, r *http.Request) {
-		//w.WriteHeader(http.StatusNotImplemented)
-		//return // disabled for now
 		id := r.URL.Query().Get("id")
 
 		avatarData := cachedAvatarIdToAvatar[id]
@@ -44,8 +40,10 @@ func init() {
 			http.Error(w, fmt.Sprintf("Failed to read thumbnail %s: %s", avatarData.ThumbnailImageUrl, err.Error()), http.StatusInternalServerError)
 			return
 		}
+
 		w.Header().Set("Content-Type", "image/png")
-		w.Header().Set("Cache-Control", "public, max-age=2592000") // 30 days
+		w.Header().Set("Cache-Control", "public, max-age=2592000")
+
 		if _, err := w.Write(bytes); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
