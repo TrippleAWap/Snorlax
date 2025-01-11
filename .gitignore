@@ -1,3 +1,4 @@
 cache.db
 config.json
 /.idea
+*.exe
