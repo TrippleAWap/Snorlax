@@ -142,7 +142,7 @@ func getCurrentHash() (string, error) {
 }
 
 func getLatestVersionBytes(version string) ([]byte, error) {
-	url := fmt.Sprintf("https://github.com/TrippleAWap/SnorlaxReleases/releases/download/%s/Snorlax.exe", version)
+	url := fmt.Sprintf("https://github.com/TrippleAWap/Snorlax/releases/download/%s/Snorlax.exe", version)
 	req, _ := http.NewRequest("GET", url, nil)
 
 	res, err := http.DefaultClient.Do(req)

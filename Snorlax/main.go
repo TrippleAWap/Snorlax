@@ -44,11 +44,32 @@ func SpawnProcess(exeRelativePath string, args ...string) error {
 	return nil
 }
 
+const VersionURL = "https://github.com/TrippleAWap/Snorlax/releases/latest"
+
+func getLatestVersion() (string, error) {
+	req, _ := http.NewRequest("GET", VersionURL, nil)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return "", fmt.Errorf("failed to get latest version - %s", res.Status)
+	}
+	breadcrumbs := strings.Split(res.Request.URL.String(), "/")
+	return breadcrumbs[len(breadcrumbs)-1], nil
+}
 func main() {
 	if !slices.Contains(os.Args, "--launch") {
 		if _, err := os.Stat("./update.exe"); os.IsNotExist(err) {
 			fmt.Println("No update.exe found, downloading...")
-			file, err := getFile("https://github.com/TrippleAWap/Snorlax/releases/latest/update.exe?raw=true")
+			lastestVersion, err := getLatestVersion()
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			file, err := getFile("https://github.com/TrippleAWap/Snorlax/releases/download/" + lastestVersion + "/update.exe")
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
