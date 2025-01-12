@@ -20,6 +20,8 @@ import (
 	"time"
 )
 
+var loggedIn bool
+
 func getFile(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -60,6 +62,10 @@ func getLatestVersion() (string, error) {
 	breadcrumbs := strings.Split(res.Request.URL.String(), "/")
 	return breadcrumbs[len(breadcrumbs)-1], nil
 }
+
+var w webview.WebView
+var randomPort int
+
 func main() {
 	if !slices.Contains(os.Args, "--launch") {
 		if _, err := os.Stat("./update.exe"); os.IsNotExist(err) {
@@ -103,9 +109,9 @@ func main() {
 	fmt.Println(pathV)
 	defer utils.PanicHandler()
 	//PrismicDatabase.GetDatabase()
-	randomPort := rand.Intn(65535-49152) + 4915
+	randomPort = rand.Intn(65535-49152) + 4915
 	go endpoints.StartServer(randomPort)
-	w := webview.New(slices.Contains(os.Args, "--debug"))
+	w = webview.New(slices.Contains(os.Args, "--debug"))
 	w.SetSize(400, 200, webview.HintMin)
 	defer w.Destroy()
 	w.Window()
@@ -126,6 +132,29 @@ func main() {
 		"updateFavoritesOnly": func(b bool) {
 			endpoints.FavoritesOnly = b
 		},
+		"loginVRChat": func(username, password string) interface{} {
+			res, err := auth.Login(&endpoints.GlobalClient, username, password)
+			if err != nil {
+				return err.Error()
+			}
+			return res
+		},
+		"loginVRChatWith2FA": func(authCookie, code string) interface{} {
+			endpoints.GlobalClient.Config.AuthCookie = authCookie
+			res, err := auth.TwoFactorAuthEmailOTP(&endpoints.GlobalClient, code)
+			if err != nil {
+				return err.Error()
+			}
+			return res
+		},
+		"setCookie": func(cookie string) error {
+			endpoints.GlobalClient.Config.AuthCookie = cookie
+			if err := VRChatAPI.WriteConfig(endpoints.GlobalClient.Config); err != nil {
+				return err
+			}
+			dispatchFunc()
+			return nil
+		},
 		"favoriteAvatar": func(avatarId string, favorite bool) {
 			if favorite {
 				endpoints.CachedIdToFavorites[avatarId] = true
@@ -142,33 +171,36 @@ func main() {
 		}
 	}
 
-	w.Dispatch(func() {
-		defer utils.PanicHandler()
-		configV, err := VRChatAPI.ReadConfig()
-		if err != nil {
-			panic(err)
-		}
-		endpoints.GlobalClient = VRChatAPI.Client{
-			Config: configV,
-			Client: http.DefaultClient,
-		}
-		user, err := auth.User(&endpoints.GlobalClient)
-		if err != nil {
-			w.Navigate("https://vrchat.com/home/login")
-			w.Init(``)
-		}
-		for user == nil {
-			time.Sleep(time.Second)
-			user, err = auth.User(&endpoints.GlobalClient)
-			if err != nil {
-				panic(err)
-			}
-		}
-		endpoints.GlobalUser = user
-		fmt.Printf("Logged in as %s\n", user.DisplayName)
-		w.Navigate("http://127.0.0.1:" + strconv.Itoa(randomPort) + "/home")
-	})
+	w.Dispatch(dispatchFunc)
 
 	w.SetTitle("Snorlax » github.com/TrippleAWap")
 	w.Run()
+}
+
+func dispatchFunc() {
+	defer utils.PanicHandler()
+	configV, err := VRChatAPI.ReadConfig()
+	if err != nil {
+		panic(err)
+	}
+	endpoints.GlobalClient = VRChatAPI.Client{
+		Config: configV,
+		Client: http.DefaultClient,
+	}
+	user, err := auth.User(&endpoints.GlobalClient)
+	if err != nil {
+		w.SetTitle("Snorlax » Login")
+		w.Navigate("http://127.0.0.1:" + strconv.Itoa(randomPort) + "/login")
+		return
+	}
+	for user == nil {
+		user, err = auth.User(&endpoints.GlobalClient)
+		if err != nil {
+			fmt.Println(err)
+			time.Sleep(time.Second)
+		}
+	}
+	endpoints.GlobalUser = user
+	fmt.Printf("Logged in as %s\n", user.DisplayName)
+	w.Navigate("http://127.0.0.1:" + strconv.Itoa(randomPort) + "/home")
 }

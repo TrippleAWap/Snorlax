@@ -30,7 +30,7 @@ var (
 )
 var cachedIdToAvatar = map[string]string{}
 var cachedAvatarIdToAvatar = map[string]avatars.Avatar{}
-var GlobalUser *auth.CurrentUser
+var GlobalUser *auth.LoginResponse
 var cacheIdToCustomModTime = map[string]time.Time{}
 var CachedIdToFavorites = map[string]bool{}
 

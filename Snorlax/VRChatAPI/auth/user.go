@@ -5,20 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 )
 
-type CurrentUser struct {
-	AcceptedTOSVersion     int    `json:"acceptedTOSVersion"`
-	AcceptedPrivacyVersion int    `json:"acceptedPrivacyVersion"`
-	AccountDeletionDate    string `json:"accountDeletionDate"`
+type LoginResponse struct {
+	SetCookie              string `json:"set-cookie,omitempty"`
+	AcceptedTOSVersion     int    `json:"acceptedTOSVersion,omitempty"`
+	AcceptedPrivacyVersion int    `json:"acceptedPrivacyVersion,omitempty"`
+	AccountDeletionDate    string `json:"accountDeletionDate,omitempty"`
 	AccountDeletionLog     []struct {
 		Message           string    `json:"message"`
 		DeletionScheduled time.Time `json:"deletionScheduled"`
 		DateTime          time.Time `json:"dateTime"`
-	} `json:"accountDeletionLog"`
-	ActiveFriends      []string `json:"activeFriends"`
-	AllowAvatarCopying bool     `json:"allowAvatarCopying"`
+	} `json:"accountDeletionLog,omitempty"`
+	ActiveFriends      []string `json:"activeFriends,omitempty"`
+	AllowAvatarCopying bool     `json:"allowAvatarCopying,omitempty"`
 	Badges             []struct {
 		AssignedAt       time.Time `json:"assignedAt"`
 		BadgeDescription string    `json:"badgeDescription"`
@@ -28,50 +30,50 @@ type CurrentUser struct {
 		Hidden           bool      `json:"hidden"`
 		Showcased        bool      `json:"showcased"`
 		UpdatedAt        time.Time `json:"updatedAt"`
-	} `json:"badges"`
-	Bio                            string    `json:"bio"`
-	BioLinks                       []string  `json:"bioLinks"`
-	CurrentAvatar                  string    `json:"currentAvatar"`
-	CurrentAvatarAssetUrl          string    `json:"currentAvatarAssetUrl"`
-	CurrentAvatarImageUrl          string    `json:"currentAvatarImageUrl"`
-	CurrentAvatarThumbnailImageUrl string    `json:"currentAvatarThumbnailImageUrl"`
-	CurrentAvatarTags              []string  `json:"currentAvatarTags"`
-	DateJoined                     string    `json:"date_joined"`
-	DeveloperType                  string    `json:"developerType"`
-	DisplayName                    string    `json:"displayName"`
-	EmailVerified                  bool      `json:"emailVerified"`
-	FallbackAvatar                 string    `json:"fallbackAvatar"`
-	FriendKey                      string    `json:"friendKey"`
-	Friends                        []string  `json:"friends"`
-	HasBirthday                    bool      `json:"hasBirthday"`
-	HideContentFilterSettings      bool      `json:"hideContentFilterSettings"`
-	UserLanguage                   string    `json:"userLanguage"`
-	UserLanguageCode               string    `json:"userLanguageCode"`
-	HasEmail                       bool      `json:"hasEmail"`
-	HasLoggedInFromClient          bool      `json:"hasLoggedInFromClient"`
-	HasPendingEmail                bool      `json:"hasPendingEmail"`
-	HomeLocation                   string    `json:"homeLocation"`
-	Id                             string    `json:"id"`
-	IsBoopingEnabled               bool      `json:"isBoopingEnabled"`
-	IsFriend                       bool      `json:"isFriend"`
-	LastActivity                   time.Time `json:"last_activity"`
-	LastLogin                      time.Time `json:"last_login"`
-	LastMobile                     time.Time `json:"last_mobile"`
-	LastPlatform                   string    `json:"last_platform"`
-	ObfuscatedEmail                string    `json:"obfuscatedEmail"`
-	ObfuscatedPendingEmail         string    `json:"obfuscatedPendingEmail"`
-	OculusId                       string    `json:"oculusId"`
-	GoogleId                       string    `json:"googleId"`
+	} `json:"badges,omitempty"`
+	Bio                            string    `json:"bio,omitempty"`
+	BioLinks                       []string  `json:"bioLinks,omitempty"`
+	CurrentAvatar                  string    `json:"currentAvatar,omitempty"`
+	CurrentAvatarAssetUrl          string    `json:"currentAvatarAssetUrl,omitempty"`
+	CurrentAvatarImageUrl          string    `json:"currentAvatarImageUrl,omitempty"`
+	CurrentAvatarThumbnailImageUrl string    `json:"currentAvatarThumbnailImageUrl,omitempty"`
+	CurrentAvatarTags              []string  `json:"currentAvatarTags,omitempty"`
+	DateJoined                     string    `json:"date_joined,omitempty"`
+	DeveloperType                  string    `json:"developerType,omitempty"`
+	DisplayName                    string    `json:"displayName,omitempty"`
+	EmailVerified                  bool      `json:"emailVerified,omitempty"`
+	FallbackAvatar                 string    `json:"fallbackAvatar,omitempty"`
+	FriendKey                      string    `json:"friendKey,omitempty"`
+	Friends                        []string  `json:"friends,omitempty"`
+	HasBirthday                    bool      `json:"hasBirthday,omitempty"`
+	HideContentFilterSettings      bool      `json:"hideContentFilterSettings,omitempty"`
+	UserLanguage                   string    `json:"userLanguage,omitempty"`
+	UserLanguageCode               string    `json:"userLanguageCode,omitempty"`
+	HasEmail                       bool      `json:"hasEmail,omitempty"`
+	HasLoggedInFromClient          bool      `json:"hasLoggedInFromClient,omitempty"`
+	HasPendingEmail                bool      `json:"hasPendingEmail,omitempty"`
+	HomeLocation                   string    `json:"homeLocation,omitempty"`
+	Id                             string    `json:"id,omitempty"`
+	IsBoopingEnabled               bool      `json:"isBoopingEnabled,omitempty"`
+	IsFriend                       bool      `json:"isFriend,omitempty"`
+	LastActivity                   time.Time `json:"last_activity,omitempty"`
+	LastLogin                      time.Time `json:"last_login,omitempty"`
+	LastMobile                     time.Time `json:"last_mobile,omitempty"`
+	LastPlatform                   string    `json:"last_platform,omitempty"`
+	ObfuscatedEmail                string    `json:"obfuscatedEmail,omitempty"`
+	ObfuscatedPendingEmail         string    `json:"obfuscatedPendingEmail,omitempty"`
+	OculusId                       string    `json:"oculusId,omitempty"`
+	GoogleId                       string    `json:"googleId,omitempty"`
 	GoogleDetails                  struct {
-	} `json:"googleDetails"`
-	PicoId           string   `json:"picoId"`
-	ViveId           string   `json:"viveId"`
-	OfflineFriends   []string `json:"offlineFriends"`
-	OnlineFriends    []string `json:"onlineFriends"`
+	} `json:"googleDetails,omitempty"`
+	PicoId           string   `json:"picoId,omitempty"`
+	ViveId           string   `json:"viveId,omitempty"`
+	OfflineFriends   []string `json:"offlineFriends,omitempty"`
+	OnlineFriends    []string `json:"onlineFriends,omitempty"`
 	PastDisplayNames []struct {
 		DisplayName string    `json:"displayName"`
 		UpdatedAt   time.Time `json:"updated_at"`
-	} `json:"pastDisplayNames"`
+	} `json:"pastDisplayNames,omitempty"`
 	Presence struct {
 		AvatarThumbnail     string   `json:"avatarThumbnail"`
 		CurrentAvatarTags   string   `json:"currentAvatarTags"`
@@ -88,29 +90,33 @@ type CurrentUser struct {
 		TravelingToWorld    string   `json:"travelingToWorld"`
 		UserIcon            string   `json:"userIcon"`
 		World               string   `json:"world"`
-	} `json:"presence"`
-	ProfilePicOverride          string   `json:"profilePicOverride"`
-	ProfilePicOverrideThumbnail string   `json:"profilePicOverrideThumbnail"`
-	Pronouns                    string   `json:"pronouns"`
-	QueuedInstance              string   `json:"queuedInstance"`
-	ReceiveMobileInvitations    bool     `json:"receiveMobileInvitations"`
-	State                       string   `json:"state"`
-	Status                      string   `json:"status"`
-	StatusDescription           string   `json:"statusDescription"`
-	StatusFirstTime             bool     `json:"statusFirstTime"`
-	StatusHistory               []string `json:"statusHistory"`
+	} `json:"presence,omitempty"`
+	ProfilePicOverride          string   `json:"profilePicOverride,omitempty"`
+	ProfilePicOverrideThumbnail string   `json:"profilePicOverrideThumbnail,omitempty"`
+	Pronouns                    string   `json:"pronouns,omitempty"`
+	QueuedInstance              string   `json:"queuedInstance,omitempty"`
+	ReceiveMobileInvitations    bool     `json:"receiveMobileInvitations,omitempty"`
+	State                       string   `json:"state,omitempty"`
+	Status                      string   `json:"status,omitempty"`
+	StatusDescription           string   `json:"statusDescription,omitempty"`
+	StatusFirstTime             bool     `json:"statusFirstTime,omitempty"`
+	StatusHistory               []string `json:"statusHistory,omitempty"`
 	SteamDetails                struct {
-	} `json:"steamDetails"`
-	SteamId                  string    `json:"steamId"`
-	Tags                     []string  `json:"tags"`
-	TwoFactorAuthEnabled     bool      `json:"twoFactorAuthEnabled"`
-	TwoFactorAuthEnabledDate time.Time `json:"twoFactorAuthEnabledDate"`
-	Unsubscribe              bool      `json:"unsubscribe"`
-	UpdatedAt                time.Time `json:"updated_at"`
-	UserIcon                 string    `json:"userIcon"`
+	} `json:"steamDetails,omitempty"`
+	SteamId                  string    `json:"steamId,omitempty"`
+	Tags                     []string  `json:"tags,omitempty"`
+	TwoFactorAuthEnabled     bool      `json:"twoFactorAuthEnabled,omitempty"`
+	TwoFactorAuthEnabledDate time.Time `json:"twoFactorAuthEnabledDate,omitempty"`
+	Unsubscribe              bool      `json:"unsubscribe,omitempty"`
+	UpdatedAt                time.Time `json:"updated_at,omitempty"`
+	UserIcon                 string    `json:"userIcon,omitempty"`
+	Error                    struct {
+		Message    string `json:"message"`
+		StatusCode int    `json:"status_code"`
+	} `json:"error,omitempty"`
 }
 
-func User(c *VRChatAPI.Client) (*CurrentUser, error) {
+func User(c *VRChatAPI.Client) (*LoginResponse, error) {
 	req, err := c.NewRequest("GET", VRChatAPI.API_ENDPOINT+"/auth/user", nil)
 	meow, err := c.DoWDefaults(req)
 	if err != nil {
@@ -124,10 +130,56 @@ func User(c *VRChatAPI.Client) (*CurrentUser, error) {
 		return nil, err
 	}
 	// Unmarshal the response into a slice of World
-	var currentUserV CurrentUser
+	var currentUserV LoginResponse
 	if err := json.Unmarshal(bytes, &currentUserV); err != nil {
 		err = fmt.Errorf("User - json.Unmarshal: %v", err)
 		return nil, err
 	}
 	return &currentUserV, nil
+}
+
+func Login(c *VRChatAPI.Client, username, password string) (map[string]interface{}, error) {
+	req, err := c.NewRequest("GET", VRChatAPI.API_ENDPOINT+"/auth/user", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(username, password)
+	meow, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer meow.Body.Close()
+	bytes, err := io.ReadAll(meow.Body)
+	if err != nil {
+		return nil, err
+	}
+	loginResponseV := map[string]interface{}{}
+	if err := json.Unmarshal(bytes, &loginResponseV); err != nil {
+		return nil, err
+	}
+	loginResponseV["Set-Cookie"] = meow.Header.Get("Set-Cookie")
+	return loginResponseV, nil
+}
+
+func TwoFactorAuthEmailOTP(c *VRChatAPI.Client, code string) (map[string]interface{}, error) {
+	req, err := c.NewRequest("POST", VRChatAPI.API_ENDPOINT+"/auth/twofactorauth/emailotp/verify", strings.NewReader(fmt.Sprintf(`{"code": "%s"}`, code)))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	twoFactorAuthResponseV := map[string]interface{}{}
+	if err := json.Unmarshal(bytes, &twoFactorAuthResponseV); err != nil {
+		return nil, err
+	}
+	return twoFactorAuthResponseV, nil
 }

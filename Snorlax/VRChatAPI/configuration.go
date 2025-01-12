@@ -57,3 +57,16 @@ func ReadConfig() (*Configuration, error) {
 	lastConfig = &config
 	return &config, nil
 }
+
+func WriteConfig(config *Configuration) error {
+	bytes, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(configPath, bytes, 0644); err != nil {
+		return err
+	}
+	lastUpdated = time.Now()
+	lastConfig = config
+	return nil
+}
