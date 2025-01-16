@@ -77,11 +77,7 @@ func init() {
 			}
 
 			go func() {
-				database, err := RejectDatabase.GetCachedAvatars()
-				if err != nil {
-					return
-				}
-				totalAdded := 0
+				database := RejectDatabase.GetCachedAvatars()
 				var uniqueAvatars []avatars.Avatar
 			findUnique:
 				for _, avatar := range AvatarsV {
@@ -93,13 +89,9 @@ func init() {
 					uniqueAvatars = append(uniqueAvatars, avatar)
 				}
 				for _, avatar := range uniqueAvatars {
-					if err := RejectDatabase.AddAvatar(avatar, GlobalUser.DisplayName); err != nil {
-						log.Println("add avatar to database failed: ", err)
-						continue
-					}
-					totalAdded++
+					_ = RejectDatabase.AddAvatar(avatar, GlobalUser.DisplayName)
 				}
-				log.Printf("Succesfully added %d avatars to the Reject database!\n", totalAdded)
+
 			}()
 
 			slices.SortFunc(AvatarsV, func(a, b avatars.Avatar) int {

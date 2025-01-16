@@ -8,7 +8,8 @@ import (
 )
 
 type Configuration struct {
-	AuthCookie string `json:"auth_cookie"`
+	SelectedAccount uint     `json:"selected_account,omitempty"`
+	Accounts        []string `json:"tokens"`
 }
 
 var (
@@ -31,7 +32,10 @@ func ReadConfig() (*Configuration, error) {
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			defaultConfig := Configuration{
-				AuthCookie: "auth_cookie",
+				SelectedAccount: 0,
+				Accounts: []string{
+					"auth_token",
+				},
 			}
 
 			bytes, err := json.MarshalIndent(defaultConfig, "", "  ")

@@ -108,7 +108,6 @@ func main() {
 	}
 	fmt.Println(pathV)
 	defer utils.PanicHandler()
-	//PrismicDatabase.GetDatabase()
 	randomPort = rand.Intn(65535-49152) + 4915
 	go endpoints.StartServer(randomPort)
 	w = webview.New(slices.Contains(os.Args, "--debug"))
@@ -140,15 +139,17 @@ func main() {
 			return res
 		},
 		"loginVRChatWith2FA": func(authCookie, code string) interface{} {
-			endpoints.GlobalClient.Config.AuthCookie = authCookie
+			//println(authCookie, code)
+			*endpoints.GlobalClient.SelectedAccount = authCookie
 			res, err := auth.TwoFactorAuthEmailOTP(&endpoints.GlobalClient, code)
 			if err != nil {
+				*endpoints.GlobalClient.SelectedAccount = ""
 				return err.Error()
 			}
 			return res
 		},
 		"setCookie": func(cookie string) error {
-			endpoints.GlobalClient.Config.AuthCookie = cookie
+			*endpoints.GlobalClient.SelectedAccount = cookie
 			if err := VRChatAPI.WriteConfig(endpoints.GlobalClient.Config); err != nil {
 				return err
 			}
@@ -173,19 +174,25 @@ func main() {
 
 	w.Dispatch(dispatchFunc)
 
-	w.SetTitle("Snorlax » github.com/TrippleAWap")
+	w.SetTitle("Snorlax » Loading...")
 	w.Run()
 }
+
+var defaultConfig = VRChatAPI.Configuration{SelectedAccount: 0, Accounts: []string{""}}
 
 func dispatchFunc() {
 	defer utils.PanicHandler()
 	configV, err := VRChatAPI.ReadConfig()
 	if err != nil {
-		panic(err)
+		if err := VRChatAPI.WriteConfig(&defaultConfig); err != nil {
+			panic(err)
+		}
+		configV = &defaultConfig
 	}
 	endpoints.GlobalClient = VRChatAPI.Client{
-		Config: configV,
-		Client: http.DefaultClient,
+		Config:          configV,
+		SelectedAccount: &configV.Accounts[configV.SelectedAccount],
+		Client:          http.DefaultClient,
 	}
 	user, err := auth.User(&endpoints.GlobalClient)
 	if err != nil {
@@ -202,5 +209,6 @@ func dispatchFunc() {
 	}
 	endpoints.GlobalUser = user
 	fmt.Printf("Logged in as %s\n", user.DisplayName)
+	w.SetTitle("Snorlax » Home")
 	w.Navigate("http://127.0.0.1:" + strconv.Itoa(randomPort) + "/home")
 }

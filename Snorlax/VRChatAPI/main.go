@@ -28,8 +28,9 @@ const (
 )
 
 type Client struct {
-	Config *Configuration
-	Client *http.Client
+	Config          *Configuration
+	SelectedAccount *string
+	Client          *http.Client
 }
 
 func (c *Client) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
@@ -41,7 +42,7 @@ func (c *Client) NewRequest(method, url string, body io.Reader) (*http.Request, 
 	for k, v := range DefaultHeaders {
 		req.Header.Set(k, v)
 	}
-	req.Header.Set("Cookie", fmt.Sprintf("auth=%s", c.Config.AuthCookie))
+	req.Header.Set("Cookie", fmt.Sprintf("auth=%s", *c.SelectedAccount))
 	return req, nil
 }
 func (c *Client) Do(req *http.Request) (*http.Response, error) {

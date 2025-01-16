@@ -5,9 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"time"
 )
 
 const (
@@ -23,45 +21,10 @@ type CachedAvatar struct {
 	Username     string `json:"username"`
 }
 
-func init() {
-	go func() {
-		for {
-			_, err := GetCachedAvatars()
-			if err != nil {
-				fmt.Println("Failed to get cached avatars:", err)
-			}
-			time.Sleep(time.Minute*5 + time.Second)
-		}
-	}()
-}
-
 var cachedDatabase []CachedAvatar
-var lastCached time.Time
 
-func GetCachedAvatars() ([]CachedAvatar, error) {
-	if time.Since(lastCached) < time.Minute*5 {
-		return cachedDatabase, nil
-	}
-	req, err := http.NewRequest("GET", ApiEndpoint+"/avatars", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-	bytesV, err := io.ReadAll(res.Body)
-
-	var cachedAvatars []CachedAvatar
-	err = json.NewDecoder(bytes.NewReader(bytesV)).Decode(&cachedAvatars)
-	if err != nil {
-		return nil, fmt.Errorf("GetCachedAvatars: failed to decode response: %w | %s", err, string(bytesV))
-	}
-	lastCached = time.Now()
-	cachedDatabase = cachedAvatars
-	return cachedAvatars, nil
+func GetCachedAvatars() []CachedAvatar {
+	return cachedDatabase
 }
 
 func AddAvatar(avatar avatars.Avatar, username string) error {
@@ -84,6 +47,9 @@ func AddAvatar(avatar avatars.Avatar, username string) error {
 		return err
 	}
 	req, err := http.NewRequest("POST", ApiEndpoint+"/avatars", bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

@@ -1,14 +1,12 @@
 package endpoints
 
 import (
-	"Snorlax/RejectDatabase"
 	"Snorlax/VRChatAPI"
 	"Snorlax/VRChatAPI/auth"
 	"Snorlax/VRChatAPI/avatars"
 	"Snorlax/cache"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"io/fs"
 	"maps"
 	"math"
@@ -167,37 +165,6 @@ func ScrapeIdsFromCache() (map[string]string, error) {
 		}(i, targetPaths[i:min(i+batchSize, len(targetPaths))])
 	}
 	i := 0
-	go func() {
-		database, err := RejectDatabase.GetCachedAvatars()
-		if err != nil {
-			return
-		}
-		i = 0
-		database = nil
-		for _, entry := range database {
-			if avatarId, ok := cachedIdToAvatar[entry.DataFilePath]; ok {
-				if avatarId == entry.Id {
-					continue
-				}
-				entry.DataFilePath = uuid.NewString()
-			}
-
-			modTime, err := time.Parse("2006-01-02 15:04:05", entry.Timestamp)
-			if err != nil {
-				modTime, err = time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", entry.Timestamp)
-			}
-			if err != nil {
-				modTime = time.Now()
-			}
-			if modTime.After(time.Now()) {
-				modTime = time.Now()
-			}
-			cacheIdToCustomModTime[entry.DataFilePath] = modTime
-			cachedIdToAvatar[entry.DataFilePath] = entry.Id
-			i++
-		}
-	}()
-	fmt.Printf("ScrapeIdsFromCache - %d entries added from database\n", i)
 	wg.Wait()
 	fmt.Printf("ScrapeIdsFromCache - %d entries added from cache\n", len(cachedIdToAvatar)-i)
 	if err := CacheV.Set("cachedIdToAvatar", cachedIdToAvatar); err != nil {
