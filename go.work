@@ -1,7 +1,0 @@
-
-use (
-	Snorlax
-	update
-)
-
-go 1.23.0

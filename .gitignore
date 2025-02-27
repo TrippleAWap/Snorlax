@@ -1,5 +1,2 @@
-cache.db
-config.json
-/.idea
-update.exe
-Snorlax.exe
+/target
+.idea

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard - Bourbon</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --secondary: hsl(0, 0%, 6%);
+            --foreground: 240 5.9% 98%;
+            --card: 180 2% 8%;
+            --theme-500: #c65353;
+            --theme-15: rgba(198, 83, 83, 0.15);
+            --theme-25: rgba(198, 83, 83, 0.25);
+            --theme-30: rgba(198, 83, 83, 0.30);
+            --theme-50: rgba(198, 83, 83, 0.50);
+            --background: rgb(8, 8, 8);
+            --text-color: #fa6a6a;
+            --accent: 180 2% 8%;
+        }
+
+        #container-icon {
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+        }
+
+        .stats-card {
+            background-color: #1f2937;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .main-content {
+            background-color: rgb(8, 8, 8)
+        }
+
+        .text-foreground\/70 {
+            color: hsl(var(--foreground)/.7)
+        }
+
+        .bg-card {
+            color: rgb(20, 21, 21)
+        }
+
+        .bg-secondary\/50 {
+            color: #0f0f0f80
+        }
+
+        .nav-link {
+            color: hsl(var(--foreground)/.7);
+        }
+
+        .nav-link.active {
+            background: #c653530a;
+            border: 0.5px solid #c6535315;
+            color: white;
+            position: relative;
+        }
+
+        .nav-link:not(.active):hover {
+            background-color: #18181b;
+            color: white;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            border-radius: 70px;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 2px;
+            height: 18px;
+            background-color: var(--theme-500);
+        }
+
+        .nav-link.active svg {
+            color: var(--theme-500);
+        }
+
+        .nav-link.active i {
+            color: var(--theme-500);
+        }
+
+        .breadcrumb-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 0.89rem;
+            color: #a3a3a3;
+        }
+
+        .breadcrumb-link {
+            color: #a3a3a3;
+            text-decoration: none;
+            margin-right: 5px;
+        }
+
+        .breadcrumb-separator {
+            margin-right: 5px;
+        }
+
+        .breadcrumb-link.active {
+            color: white;
+        }
+
+        .breadcrumb-link:hover {
+            color: white;
+        }
+
+        .search-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding-left: 2.5rem;
+            padding-right: 1rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            font-size: 1rem;
+            color: white;
+            background-color: var(--accent);
+            border: 1px solid #ffffff1a;
+            border-radius: 9999px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-input:focus {
+            border-color: #f56565;
+            box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.5);
+            outline: none;
+        }
+
+        .search-input:focus::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        .card-container {
+            overflow-y: scroll;
+            max-height: 80vh;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(198, 83, 83, 0.5) rgba(0, 0, 0, 0.8);
+            padding-right: 0;
+            margin-right: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .card-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .card-container::-webkit-scrollbar-thumb {
+            background-color: rgba(198, 83, 83, 0.5);
+            border-radius: 10px;
+        }
+
+        .card-container::-webkit-scrollbar-track {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .icon-theme-500 {
+            color: var(--theme-500);
+        }
+    </style>
+</head>
+
+<body>
+<div class="dark flex h-screen overflow-hidden font-inter selection:bg-[var(--theme-500)]">
+    <div class="w-[16rem] bg-[var(--background)] p-5 space-y-5">
+        <div class="flex items-center space-x-2 w-full text-sm selection:bg-[var(--theme-500)]">
+            <img src="https://i.ibb.co/HLDMYNRs/Arbok.png" alt="Logo" class="h-8 w-8 ml-2">
+            <h1 class="text-xl font-semibold text-white ">Bourbon</h1>
+        </div>
+        <hr class="py-2 border-none">
+        <a target="_blank" rel="noopener noreferrer" class="border-zinc-900 mt-4 duration-300 hover:bg-opacity-80"
+           href="https://discord.gg/bourbon">
+            <button class="text-white relative overflow-hidden bg-transparent p-[1px] text-xl"
+                    style="border-radius:1rem; width: 100%;">
+                <div class="border-transparent absolute inset-0" style="border-radius:calc(1rem * 0.96)">
+                    <svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"
+                         class="absolute h-full w-full" width="100%" height="100%">
+                        <rect fill="none" width="100%" height="100%" rx="30%" ry="30%"></rect>
+                    </svg>
+                    <div
+                            style="position:absolute;top:0;left:0;display:inline-block;transform:translateX(0) translateY(0) translateX(-50%) translateY(-50%)">
+                        <div
+                                class="h-20 w-20 bg-[radial-gradient(var(--theme-500)_40%,transparent_60%)] opacity-[0.5]">
+                        </div>
+                    </div>
+                </div>
+                <div class="relative flex w-full items-center text-sm text-foreground/70 antialiased backdrop-blur-xl h-[56px] justify-start gap-2 border border-zinc-800 bg-secondary/50 px-2 shadow-[0_0_15px_black]"
+                     style="border-radius:calc(1rem * 0.96)">
+                    <div
+                            class="rounded-xl border border-zinc-700 bg-[#0c0c0c] text-white p-2 flex items-center justify-center">
+                        <i stroke="currentColor" fill="currentColor" stroke-width="0" role="img" viewBox="0 0 24 24"
+                           class="fab fa-discord text-xl" style="font-size: 1.5em;"></i>
+                    </div>
+                    <div class="text-left ">
+                        <p class="translate-y-1 text-xs font-medium text-white">Join our Discord</p>
+                        <p class="text-[10px] text-zinc-500">Be part of the conversation.</p>
+                    </div>
+                </div>
+            </button>
+        </a>
+        <hr class="border-t border-zinc-800">
+        <nav class="space-y-2 mt-5 selection:bg-[var(--theme-500)]">
+            <div>
+                <h2 data-category="Dashboard"
+                    class="flex h-8 shrink-0 items-center px-2 text-xs font-medium text-foreground/70 outline-none ring-ring transition-[margin,opa] duration-200 ease-linear focus-visible:ring-2">
+                    Dashboard
+                </h2>
+                <div class="space-y-2 w-full text-sm text-foreground/70">
+                    <a href="#"
+                       class="nav-link text-foreground/70 block px-3 py-2 rounded-md hover:text-white flex items-center space-x-2"
+                       data-title="Overview" data-icon="fas fa-chart-area">
+                        <i class="fas fa-chart-area w-[1em] h-[1em] mr-1"></i>
+                        <span class="font-medium">Overview</span>
+                    </a>
+                    <a href="#"
+                       class="nav-link text-foreground/70 block px-3 py-2 rounded-md hover:text-white flex items-center space-x-2"
+                       data-title="Favorites" data-icon="fas fa-star">
+                        <i class="fas fa-star w-[1em] h-[1em] mr-1"></i>
+                        <span class="font-medium">Favorites</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+        <div class="flex h-14 items-center gap-2 absolute bottom-4 left-2 w-[12%] px-4 border-t border-zinc-800">
+                <span class="flex shrink-0 overflow-hidden rounded-full relative h-8 w-8">
+                    <img src="https://api.vrchat.cloud/api/1/file/file_3f54f4ce-884a-4feb-a656-adabaafe6921/1/"
+                         alt="Profile" class="h-full w-full object-cover rounded-full">
+                </span>
+            <div class="grid flex-1 text-left text-sm leading-tight">
+                <span class="truncate font-semibold text-white" id="username">Unknown User</span>
+            </div>
+            <button class="p-2 text-foreground/70 hover:text-white flex-1" style="right: 0;">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="flex-1 main-content">
+        <div
+                class="mt-4 bg-[#0B0B0B] border-zinc-900 border rounded-2xl p-7 selection:bg-[var(--theme-500)] shadow-lg shadow-black backdrop-blur-lg min-h-screen">
+            <div class="flex items-center mb-4">
+                <div class="mr-2">
+                    <div id="container-icon" class="mb-2"
+                         style="width: 35px; height: 35px; background-color: var(--theme-15); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-chart-area" style="font-size: 1em; color: var(--text-color);"></i>
+                    </div>
+                </div>
+                <div id="container-title" class="text-white text-xl font-semibold mb-2">Overview</div>
+            </div>
+            <hr style="width: 104%; margin-left: -28px;" class="my-4 border-t border-zinc-900">
+            <div class="bg-card rounded-lg">
+                <div class="search-container relative h-fit w-full">
+                    <i
+                            class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50"></i>
+                    <input type="text" id="searchBar" class="search-input" placeholder="Search Skins...">
+                </div>
+            </div>
+            <div class="card-container flex flex-col space-y-4 mx-auto w-full max-w-[1350px] space-y-6 px-6 py-12 overflow-y-auto">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4" id="avatar_grid">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            const navLinks = document.querySelectorAll('.nav-link');
+            const containerTitle = document.getElementById('container-title');
+            const containerIcon = document.getElementById('container-icon');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.forEach(item => item.classList.remove('active'));
+                    link.classList.add('active');
+
+                    const titleText = link.getAttribute('data-title') || 'Overview';
+                    let iconClass = '';
+
+                    if (titleText === 'Overview') {
+                        iconClass = 'fas fa-chart-area';
+                    } else if (titleText === 'Favorites') {
+                        iconClass = 'fas fa-star';
+                    } else {
+                        iconClass = 'fas fa-home';
+                    }
+
+                    containerTitle.textContent = titleText;
+                    containerIcon.innerHTML = `<i class="${iconClass} text-[var(--text-color)]"></i>`;
+                });
+            });
+        </script>
+    </div>
+</div>
+</body>
+
+</html>
