@@ -1,10 +1,21 @@
-mod scrape_cache;
+use crate::cache::cache_windows_player::get_cache_path;
+use crate::cache::db::init_db;
+use crate::cache::scrape::scrape;
 
-use tokio::time::{sleep, Duration};
+mod cache_windows_player;
+mod db;
+mod scrape;
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
-    // Simulate some async work
-    sleep(Duration::from_secs(1)).await;
     println!("Cache module running...");
+    // resolve CACHE_PATH to absolute path
+    println!("Cache path: {}", get_cache_path());
+    // avatar id -> JSON data ( minimizing api calls )
+    init_db("avatar_cache").expect("Error initializing avatar_cache database");
+    // dir path -> avatar id ( removes the process of opening a handle and searching the file )
+    init_db("dir_to_id").expect("Error initializing dir_to_id database");
+    println!("Cache loaded successfully!");
+    scrape().await.expect("Error scraping data");
     Ok(())
 }
+

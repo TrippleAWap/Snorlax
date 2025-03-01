@@ -120,10 +120,7 @@
 
         .search-input {
             width: 100%;
-            padding-left: 2.5rem;
-            padding-right: 1rem;
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
             font-size: 1rem;
             color: white;
             background-color: var(--accent);
@@ -152,7 +149,7 @@
 
         .card-container {
             overflow-y: scroll;
-            max-height: 80vh;
+            height: 77.5vh;
             scrollbar-width: thin;
             scrollbar-color: rgba(198, 83, 83, 0.5) rgba(0, 0, 0, 0.8);
             padding-right: 0;
@@ -176,6 +173,31 @@
 
         .icon-theme-500 {
             color: var(--theme-500);
+        }
+
+        .pagination {
+            color: white;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .pagination a {
+            color: white;
+            float: left;
+            padding: 8px 16px;
+            text-decoration: none;
+        }
+
+        .pagination a.active {
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .pagination a:hover:not(.active) {
+            background-color: #ddd;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -272,14 +294,24 @@
                 <div class="search-container relative h-fit w-full">
                     <i
                             class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50"></i>
-                    <input type="text" id="searchBar" class="search-input" placeholder="Search Skins...">
+                    <input type="text" id="searchBar" class="search-input" placeholder="Search Avatars...">
                 </div>
             </div>
             <div class="card-container flex flex-col space-y-4 mx-auto w-full max-w-[1350px] space-y-6 px-6 py-12 overflow-y-auto">
-                <div class="space-y-4">
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4" id="avatar_grid">
+                <div class="space-y-4 virtual-scroll-container">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 virtual-scroll-content" id="avatar_grid">
                     </div>
                 </div>
+            </div>
+            <div class="pagination">
+                <a href="#">&laquo;</a>
+                <a href="#">1</a>
+                <a href="#" class="active">2</a>
+                <a href="#">3</a>
+                <a href="#">4</a>
+                <a href="#">5</a>
+                <a href="#">6</a>
+                <a href="#">&raquo;</a>
             </div>
         </div>
         <script>

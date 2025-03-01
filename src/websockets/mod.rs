@@ -47,8 +47,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) -> Result<(), Box<dyn 
             let json_text = msg.into_text().expect("Error converting message to text");
             println!("Received: {}", &json_text);
             let json: serde_json::Value = serde_json::from_str(&json_text).expect("Error parsing JSON");
-            println!("Received JSON: {}", &json);
-            let mut response: serde_json::Value;
+            let response: serde_json::Value;
             match json.get("event").expect("Error getting event").as_str().expect("Error") {
                 "fetch_avatars" => {
                     let data = json.get("data").expect("Error").as_object().expect("Error");
@@ -56,7 +55,7 @@ async fn handle_connection(stream: tokio::net::TcpStream) -> Result<(), Box<dyn 
                     let end = data.get("end").expect("Error").as_u64().expect("Error");
                     response = serde_json::json!({
                         "event": "avatars",
-                        "data": CARD_HTML.repeat((end - start + 1) as usize)
+                        "data": vec![CARD_HTML.to_string(); (end - start) as usize]
                     });
                 }
                 _ => {
