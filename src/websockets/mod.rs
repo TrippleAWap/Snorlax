@@ -40,7 +40,6 @@ const CARD_HTML : &str = include_str!("../static/card.html");
 async fn handle_connection(stream: tokio::net::TcpStream) -> Result<(), Box<dyn Error>> {
     let ws_stream = accept_async(stream).await.expect("Error during the websocket handshake occurred");
     let (mut write, mut read) = ws_stream.split();
-
     while let Some(msg) = read.next().await {
         let msg = msg.expect("Error receiving message");
         if msg.is_text() {

@@ -4,10 +4,18 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use log::debug;
 use crate::cache::cache_windows_player::{cache_ids, get_avatar_ids, get_cache_path, get_cached_ids, walk_dir};
+use crate::cache::download_avatars::download_avatars;
 
-// total threads used to scrape files in cache directory
-const SCRAPING_THREADS: usize = 10;
-const MIN_PER_THREAD: usize = 5; // if there's less than this many files, only use one thread
+pub const SCRAPING_THREADS: usize = 10; // maximum number of threads used to scrape files in cache directory.
+pub const MIN_PER_THREAD: usize = 5; // minimum number of files a thread is allowed to scrape.
+
+pub async fn scrape() -> Result<Vec<String>, rusqlite::Error> {
+    let ids = scrape_avatar_ids().await?;
+    debug!("Scraped {} avatar ids", ids.len());
+    debug!("Downloading {} ids...", ids.len());
+    download_avatars(&ids, "authcookie_55abeec5-4bd9-4eaf-8db4-c5d680450c06").await?;
+    Ok(ids)
+}
 
 async fn scrape_files() -> Result<Vec<String>, rusqlite::Error> {
     debug!("Scraping avatar_ids...");
@@ -72,9 +80,4 @@ async fn scrape_avatar_ids() -> Result<Vec<String>, rusqlite::Error> {
     let ids = ids.lock().await;
     debug!("Scraped {} avatar ids", ids.len());
     Ok(ids.to_vec())
-}
-
-pub async fn scrape() -> Result<Vec<String>, rusqlite::Error> {
-    let ids = scrape_avatar_ids().await?;
-    Ok(ids)
 }

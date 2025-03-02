@@ -5,6 +5,7 @@ use crate::cache::scrape::scrape;
 mod cache_windows_player;
 mod db;
 mod scrape;
+mod download_avatars;
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     println!("Cache module running...");
