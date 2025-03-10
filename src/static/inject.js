@@ -10,10 +10,10 @@ window.onPostMessage = (func) => {
 
 console.log(window.port)
 window.page = 0;
-const PAGE_SIZE = 100;
+const PAGE_SIZE = 101;
 
 const createSockets = async () => {
-    const ws = new WebSocket("ws://127.0.0.1:" + window.port)
+    const ws = new WebSocket("ws://127.0.0.1:" + window.port + "/ws")
     const fetchAvatarsSpecified = (start, size) => {
         ws.send(JSON.stringify({ "event": "fetch_avatars", "data": { "start": start, "end": start + size - 1 } }))
     }

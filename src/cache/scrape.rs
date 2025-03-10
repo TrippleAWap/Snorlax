@@ -2,29 +2,53 @@ use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use log::debug;
+use log::info;
+use rusqlite::params;
 use crate::cache::cache_windows_player::{cache_ids, get_avatar_ids, get_cache_path, get_cached_ids, walk_dir};
 use crate::cache::download_avatars::download_avatars;
 
 pub const SCRAPING_THREADS: usize = 10; // maximum number of threads used to scrape files in cache directory.
 pub const MIN_PER_THREAD: usize = 5; // minimum number of files a thread is allowed to scrape.
 
-pub async fn scrape() -> Result<Vec<String>, rusqlite::Error> {
-    let ids = scrape_avatar_ids().await?;
-    debug!("Scraped {} avatar ids", ids.len());
-    debug!("Downloading {} ids...", ids.len());
-    download_avatars(&ids, "authcookie_55abeec5-4bd9-4eaf-8db4-c5d680450c06").await?;
+pub async fn scrape(auth_cookie: Option<String>,) -> Result<Vec<String>, rusqlite::Error> {
+    let mut ids = scrape_avatar_ids().await?;
+    info!("Scraped {} avatar ids", ids.len());
+    info!("Downloading {} ids...", ids.len());
+    if let Some(cookie) = auth_cookie {
+        info!("Using auth cookie: {}", cookie);
+        let _ = {
+            let conn = rusqlite::Connection::open("./cache.db")?;
+            let mut stmt = conn.prepare("SELECT 1 FROM avatar_cache WHERE key = ? LIMIT 1")?;
+
+            for i in 0..ids.len() {
+                if i > ids.len() - 1 {
+                    break;
+                }
+                let id = ids[i].clone();
+                let cached = stmt.exists(params![id])?;
+                if cached {
+                    info!("Skipping {} (already cached)", id);
+                    ids.remove(i);
+                    continue;
+                }
+            }
+            info!("Downloading {} ids...", ids.len());
+        };
+        download_avatars(&ids, &cookie).await?;
+    } else {
+        info!("No auth cookie provided, skipping download");
+    }
     Ok(ids)
 }
 
 async fn scrape_files() -> Result<Vec<String>, rusqlite::Error> {
-    debug!("Scraping avatar_ids...");
+    info!("Scraping avatar_ids...");
     let paths = walk_dir(&get_cache_path(), true, 99, |path| {
         path.ends_with("\\__data")
     }, Some(|_, _| {
         None
     })).await;
-    debug!("Scraped files, found {} paths", paths.len());
+    info!("Scraped files, found {} paths", paths.len());
     Ok(paths)
 }
 
@@ -36,10 +60,10 @@ async fn scrape_avatar_ids_(files: Vec<String>) -> Result<Vec<String>, rusqlite:
         new_ids.insert(file.clone(), ids_.clone().iter().next().unwrap_or(&"".to_string()).to_string());
         ids.extend(ids_);
     }
-    debug!("Scraped {} new avatar ids", ids.len());
-    debug!("Caching {} new ids...", new_ids.len());
+    info!("Scraped {} new avatar ids", ids.len());
+    info!("Caching {} new ids...", new_ids.len());
     cache_ids(&new_ids).expect("Failed to cache ids");
-    debug!("Cached {} new ids", new_ids.len());
+    info!("Cached {} new ids", new_ids.len());
     Ok(ids)
 }
 
@@ -56,28 +80,28 @@ async fn scrape_avatar_ids() -> Result<Vec<String>, rusqlite::Error> {
         };
         true
     }).collect::<Vec<_>>();
-    debug!("Scraped {} cached ids", all_cached_ids.len());
+    info!("Scraped {} cached ids", all_cached_ids.len());
     ids.lock().await.extend(all_cached_ids);
-    debug!("Scraped {} new paths", paths.len());
-    debug!("Scraping avatar_ids from paths...");
+    info!("Scraped {} new paths", paths.len());
+    info!("Scraping avatar_ids from paths...");
     let mut threads = vec![];
     while paths.len() > 0 {
         let target_paths = min(paths.len(), max(MIN_PER_THREAD, (paths.len() as f32 / SCRAPING_THREADS as f32).ceil() as usize));
         let paths_clone = paths.clone();
         let ids_clone = Arc::clone(&ids);
         threads.push(tokio::spawn(async move {
-            debug!("Scraping {} paths...", target_paths);
+            info!("Scraping {} paths...", target_paths);
             let ids_ = scrape_avatar_ids_(paths_clone[..target_paths].to_vec()).await.expect("Failed to scrape avatar ids");
             let mut ids = ids_clone.lock().await;
             ids.extend(ids_);
         }));
         paths.drain(..target_paths);
     }
-    debug!("Waiting for threads to finish...");
+    info!("Waiting for threads to finish...");
     for thread in threads {
         thread.await.expect("Failed to join thread");
     }
     let ids = ids.lock().await;
-    debug!("Scraped {} avatar ids", ids.len());
+    info!("Scraped {} avatar ids", ids.len());
     Ok(ids.to_vec())
 }

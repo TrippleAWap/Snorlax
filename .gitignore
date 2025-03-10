@@ -1,3 +1,5 @@
 /target
 .idea
 *.db
+.env
+cache.db

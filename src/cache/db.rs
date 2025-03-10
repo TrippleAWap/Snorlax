@@ -10,7 +10,8 @@ pub fn init_db(table: &str) -> Result<()> {
     let conn = CONN.lock().unwrap();
     conn.execute(
         &format!("CREATE TABLE IF NOT EXISTS {} (
-            key TEXT PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key TEXT NOT NULL,
             value TEXT NOT NULL
         )", table),
         params![],

@@ -2,18 +2,17 @@
         class="border border-white/5 border-t-white/10 bg-gradient-to-tr from-[#0F0F0F] to-[#0B0B0B] shadow-lg duration-300 relative rounded-lg">
     <div class="p-2 pb-0">
         <div class="relative h-[150px] overflow-hidden rounded-md">
-            <img alt="Avatar Thumbnail" loading="lazy" width="500" height="250"
-                 decoding="async" data-nimg="1"
-                 class="absolute inset-0 h-full w-full object-cover" srcset="1x, 2x" src=""
+            <img alt="Avatar Thumbnail" width="500" height="250"
+                 class="absolute inset-0 h-full w-full object-cover" src="{{thumbnail_url}}"
                  style="color: transparent;">
         </div>
     </div>
     <div class="p-2">
         <a class="group flex w-fit items-center gap-2" href="">
-            <div class="text-xs text-white/75 group-hover:underline">Avatar Creator</div>
+            <div class="text-xs text-white/75 group-hover:underline">{{author_name}}</div>
         </a>
         <div class="my-1 flex max-w-[250px] items-center gap-2">
-            <h4 class="line-clamp-1 truncate break-words font-medium text-white" id="avatar_name">Avatar Name
+            <h4 class="line-clamp-1 truncate break-words font-medium text-white" id="avatar_name">{{avatar_name}}
             </h4>
         </div>
         <ul class="mt-2 flex flex-wrap gap-1">
@@ -44,7 +43,7 @@
                 class="inline-flex items-center justify-center text-sm shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-lg border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 h-9 w-9">
             <i class="fas fa-star size-3.5" style="font-size: 1em;"></i>
         </button>
-        <button
+        <button id="{{avatar_id}}"
                 class="inline-flex items-center text-sm shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-lg border bg-[var(--theme-15)] border-[var(--theme-50)] text-[var(--text-color)] hover:bg-[var(--theme-25)] hover:border-[var(--theme-30)] h-9 px-4 w-full">
             Equip
         </button>

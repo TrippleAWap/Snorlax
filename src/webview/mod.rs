@@ -47,7 +47,7 @@ pub async fn run(port: u16) -> Result<(), Box<dyn std::error::Error>> {
                     w.add_script_to_execute_on_document_created(include_str!("../static/inject.js"),  |_| {
                         Ok(())
                     }).expect("failed to add inject.js");
-                    w.navigate_to_string(include_str!("../static/index.html")).expect("failed to embed HTML");
+                    w.navigate(&format!("http://127.0.0.1:{}/home", port)).expect("navigate");
                     unsafe {
                         let mut rect = mem::zeroed();
                         GetClientRect(hwnd, &mut rect);

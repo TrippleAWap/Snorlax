@@ -3,7 +3,7 @@ use crate::cache::db::init_db;
 use crate::cache::scrape::scrape;
 
 mod cache_windows_player;
-mod db;
+pub(crate) mod db;
 mod scrape;
 mod download_avatars;
 
@@ -16,7 +16,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     // dir path -> avatar id ( removes the process of opening a handle and searching the file )
     init_db("dir_to_id").expect("Error initializing dir_to_id database");
     println!("Cache loaded successfully!");
-    scrape().await.expect("Error scraping data");
+    scrape(std::env::var("AUTH_TOKEN").ok()).await.expect("Error scraping data");
     Ok(())
 }
 

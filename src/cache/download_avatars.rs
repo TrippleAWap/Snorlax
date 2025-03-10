@@ -3,53 +3,15 @@ use std::sync::Arc;
 use log::debug;
 use reqwest::Client;
 use rusqlite::params;
-use serde::{Deserialize, Serialize};
 use serde_json;
 use tokio::sync::Mutex;
+use vrchatapi::apis::avatars_api::GetAvatarError;
+use vrchatapi::apis::{Error, ResponseContent};
 use crate::cache::db::CONN;
 use crate::cache::scrape::{MIN_PER_THREAD, SCRAPING_THREADS};
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct UnityPackage {
-    asset_version: u32,
-    created_at: String,
-    id: String,
-    performance_rating: String,
-    platform: String,
-    scan_status: String,
-    unity_version: String,
-    variant: String,
-    impostorizer_version: Option<String>,
-}
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct Avatar {
-    author_id: String,
-    author_name: String,
-    created_at: String,
-    description: String,
-    featured: bool,
-    id: String,
-    image_url: String,
-    name: String,
-    release_status: String,
-    styles: Styles,
-    tags: Vec<String>,
-    thumbnail_image_url: String,
-    unity_package_url: String,
-    unity_package_url_object: serde_json::Value,
-    unity_packages: Vec<UnityPackage>,
-    updated_at: String,
-    version: u32,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct Styles {
-    primary: Option<String>,
-    secondary: Option<String>,
-}
-
-async fn download_avatar(avatar_id: &str, tkn: &str) -> Result<Avatar, reqwest::Error> {
+async fn download_avatar(avatar_id: &str, tkn: &str) -> Result<vrchatapi::models::Avatar, Error<GetAvatarError>> {
     let url = format!("https://vrchat.com/api/1/avatars/{}", avatar_id);
     let client = Client::new();
     let response = client.get(&url)
@@ -58,10 +20,24 @@ async fn download_avatar(avatar_id: &str, tkn: &str) -> Result<Avatar, reqwest::
         .header("Accept", "*/*")
         .send()
         .await?;
-    Ok(response.json::<Avatar>().await?)
+    let status = response.status();
+    let content = response.text().await?;
+
+    if !status.is_client_error() && !status.is_server_error() {
+        serde_json::from_str(&content).map_err(Error::from)
+    } else {
+        let entity: Option<GetAvatarError> =
+            serde_json::from_str(&content).ok();
+        let local_var_error = ResponseContent {
+            status,
+            content,
+            entity,
+        };
+        Err(Error::ResponseError(local_var_error))
+    }
 }
 
-pub async fn download_avatars(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<Avatar>, rusqlite::Error> {
+pub async fn download_avatars(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<vrchatapi::models::Avatar>, rusqlite::Error> {
     let mut avatar_ids = avatar_ids.clone();
     let data = Arc::new(Mutex::new(vec![]));
     let mut threads = Vec::new();
@@ -94,7 +70,8 @@ pub async fn download_avatars(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec
     Ok(data.to_vec())
 }
 
-async fn download_avatars_(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<Avatar>, rusqlite::Error> {
+async fn download_avatars_(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<vrchatapi::models::Avatar>, rusqlite::Error> {
+    debug!("Downloading {} avatars...", avatar_ids.len());
     let mut result = Vec::new();
     for avatar_id in avatar_ids {
         match download_avatar(avatar_id, tkn).await {
@@ -102,7 +79,6 @@ async fn download_avatars_(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<Av
                 result.push(avatar);
             }
             Err(e) => {
-                result.push(Avatar::default());
                 println!("Error downloading avatar {}: {}", avatar_id, e);
             }
         }
