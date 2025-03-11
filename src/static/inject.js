@@ -27,6 +27,7 @@ const fetchAvatarsSpecified = (ws, start, size) => {
 const fetchAvatars = (ws) => {
     fetchAvatarsSpecified(ws, window.page * PAGE_SIZE, PAGE_SIZE)
 }
+
 const updatePageNumber = (current) => {
     current = Math.max(0, Math.min(current, window.pages));
     window.page = current;
@@ -35,6 +36,7 @@ const updatePageNumber = (current) => {
         pageNumber.textContent = `Page ${current + 1} of ${window.pages + 1}`;
     }
 }
+
 const handlePagination = (button, ws) => {
     if (button.disabled) {
         return;
@@ -128,7 +130,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const pagination = document.querySelectorAll("div[class='pagination']>a");
     pagination.forEach(button => {
-        console.log(button)
         button.addEventListener("click", () => {
             handlePagination(button, ws);
         });
