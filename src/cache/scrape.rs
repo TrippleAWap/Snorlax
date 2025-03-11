@@ -5,6 +5,7 @@ use tokio::sync::Mutex;
 use log::info;
 use rusqlite::params;
 use crate::cache::cache_windows_player::{cache_ids, get_avatar_ids, get_cache_path, get_cached_ids, walk_dir};
+use crate::cache::db::CONN;
 use crate::cache::download_avatars::download_avatars;
 
 pub const SCRAPING_THREADS: usize = 10; // maximum number of threads used to scrape files in cache directory.
@@ -16,10 +17,10 @@ pub async fn scrape(auth_cookie: Option<String>,) -> Result<Vec<String>, rusqlit
     info!("Downloading {} ids...", ids.len());
     if let Some(cookie) = auth_cookie {
         info!("Using auth cookie: {}", cookie);
-        let _ = {
-            let conn = rusqlite::Connection::open("./cache.db")?;
-            let mut stmt = conn.prepare("SELECT 1 FROM avatar_cache WHERE key = ? LIMIT 1")?;
-
+        {
+            let conn = CONN.lock().unwrap();
+            let mut stmt = conn.prepare("SELECT 1 FROM avatar_cache WHERE key =? LIMIT 1")?;
+            info!("Checking {} cached ids...", ids.len());
             for i in 0..ids.len() {
                 if i > ids.len() - 1 {
                     break;
@@ -92,7 +93,9 @@ async fn scrape_avatar_ids() -> Result<Vec<String>, rusqlite::Error> {
         threads.push(tokio::spawn(async move {
             info!("Scraping {} paths...", target_paths);
             let ids_ = scrape_avatar_ids_(paths_clone[..target_paths].to_vec()).await.expect("Failed to scrape avatar ids");
+            info!("Scraped {} ids from paths", ids_.len());
             let mut ids = ids_clone.lock().await;
+            info!("Extending ids with {} ids", ids_.len());
             ids.extend(ids_);
         }));
         paths.drain(..target_paths);

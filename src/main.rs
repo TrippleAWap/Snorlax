@@ -1,15 +1,22 @@
-use crate::websockets::find_open_port;
+use std::env;
+use crate::server::find_open_port;
 use dotenv::dotenv;
+use crate::webview::login;
 
 mod cache;
 mod webview;
-mod websockets;
+mod server;
 mod authorization;
 
 #[tokio::main]
 async fn main() {
     dotenv().ok();
     env_logger::init();
+    if env::var("AUTH_TOKEN").is_err() {
+        log::error!("AUTH_TOKEN environment variable not set");
+        // start login;
+        login::run().await.expect("Error while running login");
+    }
     let port = find_open_port(1900, 9999).await.expect("Couldn't open port");
     log::info!("Listening on port {}", port);
     tokio::spawn(async move {
@@ -19,7 +26,7 @@ async fn main() {
         cache::run().await.expect("Error while running cache");
     });
     tokio::spawn(async move {
-        websockets::run(port).await.expect("Error while running websockets");
+        server::run(port).await.expect("Error while running websockets");
     });
     webview::run(port).await.expect("Error while running webview");
 }

@@ -51,13 +51,6 @@ pub async fn get_avatar_ids(path: &str, single: bool) -> Vec<String> {
     let Ok(file) = File::open(path).await else {
         return Vec::new();
     };
-    let mut cache_id: &str = "";
-    if path.ends_with("\\__data") {
-        let split: Vec<&str> = path.split("\\").collect();
-        cache_id = split[split.len() - 2];
-    }
-    if !cache_id.is_empty() {
-    }
 
     let mut reader = BufReader::new(file);
     let mut avatar_ids = Vec::new();

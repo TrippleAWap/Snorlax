@@ -10,16 +10,57 @@ window.onPostMessage = (func) => {
 
 console.log(window.port)
 window.page = 0;
-const PAGE_SIZE = 101;
+window.pages = 0;
+const PAGE_SIZE = 100;
 
-const createSockets = async () => {
+let lastFilter = "";
+let currentFilter = "";
+
+const fetchAvatarsSpecified = (ws, start, size) => {
+    if (lastFilter !== currentFilter) {
+        lastFilter = currentFilter;
+        // reset page to 0;
+        window.page = 0;
+    }
+    ws.send(JSON.stringify({ "event": "fetch_avatars", "data": { "start": start, "end": start + size } }))
+}
+const fetchAvatars = (ws) => {
+    fetchAvatarsSpecified(ws, window.page * PAGE_SIZE, PAGE_SIZE)
+}
+const updatePageNumber = (current) => {
+    current = Math.max(0, Math.min(current, window.pages));
+    window.page = current;
+    const pageNumber = document.querySelector("span[id='page_number']");
+    if (pageNumber) {
+        pageNumber.textContent = `Page ${current + 1} of ${window.pages + 1}`;
+    }
+}
+const handlePagination = (button, ws) => {
+    if (button.disabled) {
+        return;
+    }
+    const direction = button.dataset.direction;
+    const current = window.page;
+    console.log(direction)
+    switch (direction) {
+        case "first":
+            updatePageNumber(0);
+            break;
+        case "last":
+            updatePageNumber(window.pages);
+            break;
+        case "prev":
+            updatePageNumber(current - 1);
+            break;
+        case "next":
+            updatePageNumber(current + 1);
+            break;
+    }
+    fetchAvatars(ws);
+}
+const createSockets = async () =>  {
     const ws = new WebSocket("ws://127.0.0.1:" + window.port + "/ws")
-    const fetchAvatarsSpecified = (start, size) => {
-        ws.send(JSON.stringify({ "event": "fetch_avatars", "data": { "start": start, "end": start + size - 1 } }))
-    }
-    const fetchAvatars = () => {
-        fetchAvatarsSpecified(window.page * PAGE_SIZE, PAGE_SIZE)
-    }
+
     ws.onmessage = (event) => {
         const json = JSON.parse(event.data);
         if (!json.event || !json.data)
@@ -28,36 +69,17 @@ const createSockets = async () => {
         if (!grid)
             return console.error("Could not find avatar grid");
         switch (json.event) {
-            case "new_avatars":
-                const count = json.data.length;
-                console.log(`Received ${count} new avatars`);
-                if (window.page !== 0) {
-                     console.log(`Fetching avatars for page ${window.page}`);
-                     fetchAvatarsSpecified(window.page * PAGE_SIZE, PAGE_SIZE)
-                }
-                const entries = Array.from(grid.children);
-
-                while (entries.length > PAGE_SIZE) {
-                    entries.pop().remove();
-                }
-
-                json.data.forEach(data => {
-                    grid.insertAdjacentHTML("afterbegin", `<div class="avatar">${data}</div>`);
-                });
-
-                while (grid.children.length > PAGE_SIZE) {
-                    grid.lastChild.remove();
-                }
-                break;
             case "avatars":
-                console.log(`Received ${json.data.length} avatars`);
-                const newEntries = Math.min(PAGE_SIZE, json.data.length)
-                json.data.slice(0, newEntries).forEach(html => {
+                console.log(`Received ${json.data.total_count} avatars`);
+                window.pages = Math.ceil(json.data.total_count / PAGE_SIZE);
+                const newEntries = Math.min(PAGE_SIZE, json.data.avatars.length)
+                json.data.avatars.slice(0, newEntries).forEach(html => {
                     grid.insertAdjacentHTML("afterbegin", html)
                 });
                 while (grid.children.length > PAGE_SIZE) {
                     grid.lastChild.remove();
                 }
+                updatePageNumber(window.page, window.pages)
                 break;
             default:
                 console.error("Unknown event: " + json.event);
@@ -68,9 +90,47 @@ const createSockets = async () => {
         await new Promise(r => setTimeout(r, 100))
     }
     console.log("Websocket connected");
-    fetchAvatars();
+    fetchAvatars(ws);
+    setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            fetchAvatars(ws);
+        }
+    }, 5000);
+    return ws;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    createSockets().catch(e => console.error(e));
+document.addEventListener('DOMContentLoaded', async () => {
+    fetch("/login", { method: "GET" }).then(r => r.json()).then(data => {
+        const profile_pic = document.querySelector("img[id='profile_pic']");
+        profile_pic.src = data.userIcon;
+        const username = document.querySelector("span[id='username']");
+        username.textContent = data.displayName;
+        console.log(data);
+    }).catch(e => console.error(e));
+    const ws = await createSockets().catch(e => console.error(e));
+    if (!ws) {
+        console.error("Could not connect to websocket");
+        return;
+    }
+    const grid = document.querySelector("div[id='avatar_grid']");
+    const searchBar = document.querySelector("input[class='search-input']");
+    searchBar.addEventListener("keyup", (event) => {
+        console.log('searching for', searchBar.value);
+        currentFilter = searchBar.value;
+        fetch("/api/filter", {method: "POST", body: searchBar.value});
+        grid.childNodes.forEach((node) => {
+            if (!node.textContent.toLowerCase().includes(searchBar.value.toLowerCase())) {
+                node.remove()
+            }
+        })
+        fetchAvatars(ws);
+    })
+
+    const pagination = document.querySelectorAll("div[class='pagination']>a");
+    pagination.forEach(button => {
+        console.log(button)
+        button.addEventListener("click", () => {
+            handlePagination(button, ws);
+        });
+    });
 });

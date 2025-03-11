@@ -3,12 +3,12 @@
     <div class="p-2 pb-0">
         <div class="relative h-[150px] overflow-hidden rounded-md">
             <img alt="Avatar Thumbnail" width="500" height="250"
-                 class="absolute inset-0 h-full w-full object-cover" src="{{thumbnail_url}}"
+                 class="absolute inset-0 h-full w-full object-cover" loading="lazy" src="{{thumbnail_url}}"
                  style="color: transparent;">
         </div>
     </div>
     <div class="p-2">
-        <a class="group flex w-fit items-center gap-2" href="">
+        <a class="group flex w-fit items-center gap-2" href="javascript:window.open('https://vrchat.com/home/user/{{author_id}}');">
             <div class="text-xs text-white/75 group-hover:underline">{{author_name}}</div>
         </a>
         <div class="my-1 flex max-w-[250px] items-center gap-2">
@@ -16,22 +16,7 @@
             </h4>
         </div>
         <ul class="mt-2 flex flex-wrap gap-1">
-            <li
-                    class="inline-flex items-center px-2 py-1 text-xs font-semibold transition-colors rounded-full bg-white/5 hover:bg-white/10 text-white">
-                #IOS
-            </li>
-            <li
-                    class="inline-flex items-center px-2 py-1 text-xs font-semibold transition-colors rounded-full bg-white/5 hover:bg-white/10 text-white">
-                #Android
-            </li>
-            <li
-                    class="inline-flex items-center px-2 py-1 text-xs font-semibold transition-colors rounded-full bg-white/5 hover:bg-white/10 text-white">
-                #Desktop
-            </li>
-            <li
-                    class="inline-flex items-center px-2 py-1 text-xs font-semibold transition-colors rounded-full bg-white/5 hover:bg-white/10 text-white">
-                #Quest
-            </li>
+            {{platform_elements}}
         </ul>
     </div>
     <div data-orientation="horizontal" role="none" class="relative shrink-0">
@@ -44,6 +29,18 @@
             <i class="fas fa-star size-3.5" style="font-size: 1em;"></i>
         </button>
         <button id="{{avatar_id}}"
+                onclick="(async (element) => {
+                    fetch('/api/avatar/equip/' + element.id, {
+                        method: 'GET'
+                    }).then(response => {
+                        element.disabled = false;
+                        if (!response.ok) {
+                            console.error('Error:', response.statusText);
+                        }
+                    }).catch(error => {
+                        console.error(error);
+                    });
+                })(this)"
                 class="inline-flex items-center text-sm shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-lg border bg-[var(--theme-15)] border-[var(--theme-50)] text-[var(--text-color)] hover:bg-[var(--theme-25)] hover:border-[var(--theme-30)] h-9 px-4 w-full">
             Equip
         </button>

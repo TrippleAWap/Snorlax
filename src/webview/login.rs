@@ -1,8 +1,6 @@
-pub mod login;
-
 use once_cell::unsync::OnceCell;
 use std::env::args;
-use std::mem;
+use std::{fs, mem};
 use std::rc::Rc;
 use webview2::Controller;
 use winapi::shared::windef::*;
@@ -12,10 +10,9 @@ use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::platform::windows::{WindowBuilderExtWindows, WindowExtWindows};
 use winit::window::{Icon, WindowBuilder};
+use std::process::{Command, exit};
 
-
-pub async fn run(port: u16) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Starting webview on port {}", port);
+pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let event_loop = EventLoop::new();
     let image = image::load_from_memory(include_bytes!("../static/icon.ico")).expect("failed to load icon");
     let icon = Icon::from_rgba(image.to_rgba8().into_raw(), image.width(), image.height()).expect("failed to create icon");
@@ -42,14 +39,28 @@ pub async fn run(port: u16) -> Result<(), Box<dyn std::error::Error>> {
                         let _ = settings.put_is_zoom_control_enabled(true);
                         let _ = settings.put_are_dev_tools_enabled(args().any(|arg| arg == "--devtools"));
                     });
-                    w.add_script_to_execute_on_document_created(&format!("window.port = {}", port.to_string()), |err| {
-                        println!("{}", err);
+                    w.add_web_resource_requested_filter("*", webview2::WebResourceContext::All).expect("Failed to add_web_resource_requested_filter");
+                    w.add_web_resource_requested(move |_, request| {
+                        let cookies = request.get_request().unwrap().get_headers().unwrap().get_header("Cookie").unwrap_or("".to_string());
+                        // get auth;
+                        let auth = cookies.split("; ").find(|cookie| cookie.starts_with("auth=")).map(|cookie| cookie.split("=").last().unwrap().to_string());
+                        if let Some(auth) = auth {
+                            let current_env = fs::read_to_string(".env").unwrap_or_default();
+                            fs::write(".env", format!("{}\nAUTH_TOKEN={}", current_env, auth)).unwrap();
+                            match Command::new(args().next().unwrap())
+                                .spawn() {
+                                Ok(child) => child,
+                                Err(e) => {
+                                    eprintln!("Failed to spawn new_exe: {}", e);
+                                    exit(1);
+                                }
+                                // read .env file;
+                            };
+                            exit(0);
+                        }
                         Ok(())
-                    }).expect("execute_script");
-                    w.add_script_to_execute_on_document_created(include_str!("../static/inject.js"),  |_| {
-                        Ok(())
-                    }).expect("failed to add inject.js");
-                    w.navigate(&format!("http://127.0.0.1:{}/home", port)).expect("navigate");
+                    }).expect("Failed to add_web_resource_requested");
+                    w.navigate(&"https://vrchat.com/home/login").expect("navigate");
                     unsafe {
                         let mut rect = mem::zeroed();
                         GetClientRect(hwnd, &mut rect);

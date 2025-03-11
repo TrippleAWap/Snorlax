@@ -176,28 +176,26 @@
         }
 
         .pagination {
-            color: white;
             display: flex;
+            align-items: center;
             justify-content: center;
-            width: 100%;
+            gap: 8px;
         }
 
         .pagination a {
-            color: white;
-            float: left;
-            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
             text-decoration: none;
+            cursor: pointer;
         }
 
-        .pagination a.active {
-            background-color: #4CAF50;
-            color: white;
-            border-radius: 5px;
-        }
-
-        .pagination a:hover:not(.active) {
-            background-color: #ddd;
-            border-radius: 5px;
+        .pagination span {
+            color: #fff;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -206,8 +204,8 @@
 <div class="dark flex h-screen overflow-hidden font-inter selection:bg-[var(--theme-500)]">
     <div class="w-[16rem] bg-[var(--background)] p-5 space-y-5">
         <div class="flex items-center space-x-2 w-full text-sm selection:bg-[var(--theme-500)]">
-            <img src="https://i.ibb.co/HLDMYNRs/Arbok.png" alt="Logo" class="h-8 w-8 ml-2">
-            <h1 class="text-xl font-semibold text-white ">Bourbon</h1>
+            <img src="/logo" alt="Logo" class="h-8 w-8 ml-2">
+            <h1 class="text-xl font-semibold text-white">Snorlax</h1>
         </div>
         <hr class="py-2 border-none">
         <a target="_blank" rel="noopener noreferrer" class="border-zinc-900 mt-4 duration-300 hover:bg-opacity-80"
@@ -263,15 +261,15 @@
                 </div>
             </div>
         </nav>
-        <div class="flex h-14 items-center gap-2 absolute bottom-4 left-2 w-[12%] px-4 border-t border-zinc-800">
+        <div class="flex h-14 items-center gap-2 absolute bottom-4 left-2 px-4 border-t border-zinc-800"
+             style="width: 14.75rem">
                 <span class="flex shrink-0 overflow-hidden rounded-full relative h-8 w-8">
-                    <img src="https://api.vrchat.cloud/api/1/file/file_3f54f4ce-884a-4feb-a656-adabaafe6921/1/"
-                         alt="Profile" class="h-full w-full object-cover rounded-full">
+                    <img src="" id="profile_pic" alt="Profile" class="h-full w-full object-cover rounded-full">
                 </span>
             <div class="grid flex-1 text-left text-sm leading-tight">
-                <span class="truncate font-semibold text-white" id="username">Unknown User</span>
+                <span class="font-semibold text-white truncate text-center" id="username">Unknown User</span>
             </div>
-            <button class="p-2 text-foreground/70 hover:text-white flex-1" style="right: 0;">
+            <button class="text-foreground/70 hover:text-white font-medium">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
             </button>
         </div>
@@ -292,26 +290,50 @@
             <hr style="width: 104%; margin-left: -28px;" class="my-4 border-t border-zinc-900">
             <div class="bg-card rounded-lg">
                 <div class="search-container relative h-fit w-full">
-                    <i
-                            class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50"></i>
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50"></i>
                     <input type="text" id="searchBar" class="search-input" placeholder="Search Avatars...">
                 </div>
             </div>
-            <div class="card-container flex flex-col space-y-4 mx-auto w-full max-w-[1350px] space-y-6 px-6 py-12 overflow-y-auto">
+            <div
+                    class="card-container flex flex-col space-y-4 mx-auto w-full max-w-[1350px] space-y-6 px-6 py-12 overflow-y-auto">
                 <div class="space-y-4 virtual-scroll-container">
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 virtual-scroll-content" id="avatar_grid">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 virtual-scroll-content"
+                         id="avatar_grid">
                     </div>
                 </div>
             </div>
             <div class="pagination">
-                <a href="#">&laquo;</a>
-                <a href="#" class="active">1</a>
-                <a href="#">2</a>
-                <a href="#">3</a>
-                <a href="#">4</a>
-                <a href="#">5</a>
-                <a href="#">6</a>
-                <a href="#">&raquo;</a>
+                <a href="#" data-direction="first"
+                   class="inline-flex items-center text-xs shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 rounded-full"><svg
+                        stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
+                        stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" height="1em"
+                        width="1em" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m17 18-6-6 6-6"></path>
+                    <path d="M7 6v12"></path>
+                </svg></a>
+                <a href="#" data-direction="prev"
+                   class="inline-flex items-center text-xs shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 rounded-full"
+                   disabled><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
+                                 stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" height="1em"
+                                 width="1em" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m15 18-6-6 6-6"></path>
+                </svg></a>
+                <span class="text-white" id="page_number">Page 1 of 6</span>
+                <a href="#" data-direction="next"
+                   class="inline-flex items-center text-xs shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 rounded-full"><svg
+                        stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
+                        stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" height="1em"
+                        width="1em" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m9 18 6-6-6-6"></path>
+                </svg></a>
+                <a href="#" data-direction="last"
+                   class="inline-flex items-center text-sm shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 rounded-full"><svg
+                        stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
+                        stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" height="1em"
+                        width="1em" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m7 18 6-6-6-6"></path>
+                    <path d="M17 6v12"></path>
+                </svg></a>
             </div>
         </div>
         <script>
