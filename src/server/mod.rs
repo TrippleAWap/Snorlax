@@ -3,6 +3,7 @@ mod equip;
 mod thumbnail;
 mod login;
 mod filter;
+mod favorites;
 
 use rusqlite::{params, Connection};
 use std::error::Error;
@@ -31,25 +32,40 @@ pub async fn run(port: u16) -> Result<(), Box<dyn Error>> {
         .map(|ws: warp::ws::Ws| {
             ws.on_upgrade(websocket::process_ws)
         });
+
     let filter_update_route = warp::path!("api" / "filter")
         .and(warp::post())
         .and(warp::body::bytes())
         .and_then(filter::handle_update_filter);
 
+    let filter_favorites_route = warp::path!("api" / "favorites")
+        .and(warp::post())
+        .and(warp::body::json())
+        .and_then(favorites::handle_update_favorites);
+
+
     let thumbnail_route = warp::path!("thumbnail" / String / u32 / u32)
         .and_then(thumbnail::handle_thumbnail);
+    
     let equip_route = warp::path!("api" / "avatar" / "equip" / String)
         .and_then(equip::handle_avatar_equip);
+    
     let home_route = warp::path("home").map(|| {
         warp::reply::html(include_str!("../static/index.html"))
     });
     let login_route = warp::path!("login")
         .and_then(login::handle_login);
 
-    let routes = ws_route.or(thumbnail_route).or(home_route).or(equip_route).or(login_route).or(filter_update_route);
+    let routes = ws_route
+        .or(thumbnail_route)
+        .or(home_route)
+        .or(equip_route)
+        .or(login_route)
+        .or(filter_update_route)
+        .or(filter_favorites_route);
 
     let addr = ([127, 0, 0, 1], port);
-    println!("Server running on http://{}:{}", addr.0[0], addr.1);
+    println!("Server running on http://127.0.0.1:{}", addr.1);
 
     warp::serve(routes).run(addr).await;
     Ok(())

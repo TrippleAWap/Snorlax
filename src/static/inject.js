@@ -24,8 +24,17 @@ const fetchAvatarsSpecified = (ws, start, size) => {
     }
     ws.send(JSON.stringify({ "event": "fetch_avatars", "data": { "start": start, "end": start + size } }))
 }
+
 const fetchAvatars = (ws) => {
     fetchAvatarsSpecified(ws, window.page * PAGE_SIZE, PAGE_SIZE)
+}
+
+const toggleFavorites = async (ws, state) => {
+    await fetch("/toggle_favorites", {
+        method: "POST",
+        body: JSON.stringify({ "state": state })
+    }).then(r => console.log(r.body));
+    fetchAvatars(ws);
 }
 
 const updatePageNumber = (current) => {
@@ -132,6 +141,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     pagination.forEach(button => {
         button.addEventListener("click", () => {
             handlePagination(button, ws);
+        });
+    });
+
+    const navbar = document.querySelectorAll("div[id='navbar']>a");
+    navbar.forEach(link => {
+        link.addEventListener("click", () => {
+            switch (link.dataset.title) {
+                case "Overview":
+                    toggleFavorites(ws, false);
+                    break;
+                case "Favorites":
+                    toggleFavorites(ws, true);
+                    break;
+                default:
+                    console.error("Unknown link: " + link.dataset.title);
+            }
+            console.log("clicked on", link.dataset.title);
         });
     });
 });
