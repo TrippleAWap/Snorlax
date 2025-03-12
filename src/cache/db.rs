@@ -11,7 +11,7 @@ pub fn init_db(table: &str) -> Result<()> {
     conn.execute(
         &format!("CREATE TABLE IF NOT EXISTS {} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            key TEXT NOT NULL,
+            key TEXT UNIQUE NOT NULL,
             value TEXT NOT NULL
         )", table),
         params![],

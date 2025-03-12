@@ -40,9 +40,11 @@ pub async fn run(port: u16) -> Result<(), Box<dyn Error>> {
 
     let filter_favorites_route = warp::path!("api" / "favorites")
         .and(warp::post())
-        .and(warp::body::json())
+        .and(warp::body::bytes())
         .and_then(favorites::handle_update_favorites);
-
+    let favorite_route = warp::path!("api" / "favorite" / String)
+        .and(warp::post())
+        .and_then(favorites::handle_favorite_avatar);
 
     let thumbnail_route = warp::path!("thumbnail" / String / u32 / u32)
         .and_then(thumbnail::handle_thumbnail);
@@ -62,7 +64,8 @@ pub async fn run(port: u16) -> Result<(), Box<dyn Error>> {
         .or(equip_route)
         .or(login_route)
         .or(filter_update_route)
-        .or(filter_favorites_route);
+        .or(filter_favorites_route)
+        .or(favorite_route);
 
     let addr = ([127, 0, 0, 1], port);
     println!("Server running on http://127.0.0.1:{}", addr.1);
@@ -76,8 +79,8 @@ fn map_row(row: &rusqlite::Row) -> rusqlite::Result<(i64, String, String)> {
     Ok((row.get(0)?, row.get(1)?, row.get(2)?))
 }
 
-pub fn query_avatar_cache(conn: &Connection, filter: Option<String>) -> Result<Vec<(i64, String, String)>, Box<dyn Error>> {
-    let base_sql = "SELECT id, key, value FROM avatar_cache";
+pub fn query_avatar_cache(conn: &Connection, filter: Option<String>, favorites_only: bool) -> Result<Vec<(i64, String, String)>, Box<dyn Error>> {
+    let base_sql = "SELECT id, key, value FROM ".to_owned() + if favorites_only { "avatar_favorites" } else { "avatar_cache" };
     let sql = if filter.is_some() {
         info!("filter: {}", filter.as_ref().unwrap());
         format!("{} WHERE value LIKE ? ORDER BY id DESC", base_sql)

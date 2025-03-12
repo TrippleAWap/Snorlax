@@ -4,7 +4,7 @@ use crate::cache::db::CONN;
 use crate::server::{query_avatar_cache, CARD_HTML};
 use std::sync::Mutex;
 use once_cell::sync::Lazy;
-
+use crate::server::favorites::FAVORITE_FILTER;
 pub static FILTER_STRING: Lazy<Mutex<String>> = Lazy::new(|| Mutex::new(String::new()));
 
 pub async fn process_ws(ws: warp::ws::WebSocket)  {
@@ -25,7 +25,9 @@ pub async fn process_ws(ws: warp::ws::WebSocket)  {
 
                     let conn = CONN.lock().unwrap();
                     let filter_string = FILTER_STRING.lock().unwrap().clone();
-                    let mut avatars = query_avatar_cache(&conn, if filter_string.is_empty() { None } else { Some(filter_string) }).expect("Error querying avatar cache");
+                    let favorites = FAVORITE_FILTER.lock().unwrap();
+
+                    let mut avatars = query_avatar_cache(&conn, if filter_string.is_empty() { None } else { Some(filter_string) }, *favorites).expect("Error querying avatar cache");
                     // splice the avatars into the requested range
                     let total_count = avatars.len() as u64;
                     avatars = avatars.iter().skip(start as usize).take(end as usize).cloned().collect();

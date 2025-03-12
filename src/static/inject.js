@@ -29,12 +29,11 @@ const fetchAvatars = (ws) => {
     fetchAvatarsSpecified(ws, window.page * PAGE_SIZE, PAGE_SIZE)
 }
 
-const toggleFavorites = async (ws, state) => {
-    await fetch("/toggle_favorites", {
+const toggleFavorites = async (state) => {
+    await fetch("/api/favorites", {
         method: "POST",
-        body: JSON.stringify({ "state": state })
+        body: state.toString()
     }).then(r => console.log(r.body));
-    fetchAvatars(ws);
 }
 
 const updatePageNumber = (current) => {
@@ -70,6 +69,7 @@ const handlePagination = (button, ws) => {
     fetchAvatars(ws);
 }
 const createSockets = async () =>  {
+    await toggleFavorites(false)
     const ws = new WebSocket("ws://127.0.0.1:" + window.port + "/ws")
 
     ws.onmessage = (event) => {
@@ -82,13 +82,14 @@ const createSockets = async () =>  {
         switch (json.event) {
             case "avatars":
                 console.log(`Received ${json.data.total_count} avatars`);
-                window.pages = Math.ceil(json.data.total_count / PAGE_SIZE);
-                const newEntries = Math.min(PAGE_SIZE, json.data.avatars.length)
-                json.data.avatars.slice(0, newEntries).forEach(html => {
+                window.pages = Math.max(Math.ceil(json.data.total_count / PAGE_SIZE) - 1, 0);
+                const entries = Math.min(PAGE_SIZE, json.data.avatars.length)
+                const childCount = grid.children.length + 1;
+                json.data.avatars.slice(0, entries).forEach(html => {
                     grid.insertAdjacentHTML("afterbegin", html)
                 });
-                while (grid.children.length > PAGE_SIZE) {
-                    grid.lastChild.remove();
+                for (let i = entries; i < childCount; i++) {
+                    grid.lastElementChild?.remove?.();
                 }
                 updatePageNumber(window.page, window.pages)
                 break;
@@ -125,7 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const grid = document.querySelector("div[id='avatar_grid']");
     const searchBar = document.querySelector("input[class='search-input']");
-    searchBar.addEventListener("keyup", (event) => {
+    searchBar.addEventListener("keyup", () => {
         console.log('searching for', searchBar.value);
         currentFilter = searchBar.value;
         fetch("/api/filter", {method: "POST", body: searchBar.value});
@@ -146,13 +147,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const navbar = document.querySelectorAll("div[id='navbar']>a");
     navbar.forEach(link => {
-        link.addEventListener("click", () => {
+        link.addEventListener("click", async () => {
+            if (link.dataset.disabled === "true") {
+                return;
+            }
+            const grid = document.querySelector("div[id='avatar_grid']");
+            grid.innerHTML = "";
+            const navbar = document.querySelectorAll("div[id='navbar']>a");
+            navbar.forEach(l => l.dataset.disabled = "false");
+            link.dataset.disabled = "true";
             switch (link.dataset.title) {
                 case "Overview":
-                    toggleFavorites(ws, false);
+                    await toggleFavorites(false);
+                    fetchAvatars(ws);
                     break;
                 case "Favorites":
-                    toggleFavorites(ws, true);
+                    await toggleFavorites(true);
+                    fetchAvatars(ws);
                     break;
                 default:
                     console.error("Unknown link: " + link.dataset.title);

@@ -15,8 +15,12 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     init_db("avatar_cache").expect("Error initializing avatar_cache database");
     // dir path -> avatar id ( removes the process of opening a handle and searching the file )
     init_db("dir_to_id").expect("Error initializing dir_to_id database");
+    init_db("avatar_favorites").expect("Error initializing favorite_avatar database");
     println!("Cache loaded successfully!");
-    scrape(std::env::var("AUTH_TOKEN").ok()).await.expect("Error scraping data");
+    loop {
+        scrape(std::env::var("AUTH_TOKEN").ok()).await.expect("Error scraping data");
+        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    }
     Ok(())
 }
 

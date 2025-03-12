@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
 use lazy_regex::{lazy_regex, Lazy, Regex};
-use rusqlite::params;
+use rusqlite::{params, OptionalExtension};
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use crate::cache::db::CONN;
@@ -26,6 +26,21 @@ pub fn cache_ids(map: &HashMap<String, String>) -> Result<(), rusqlite::Error>{
     for (key, value) in map {
         stmt.execute(params![key, value])?;
     }
+    Ok(())
+}
+
+pub fn cache_avatars(map: &HashMap<String, String>) -> Result<(), rusqlite::Error>{
+    let conn = CONN.lock().unwrap();
+    let mut exists_stmt = conn.prepare("SELECT 1 FROM avatar_cache WHERE key = ? LIMIT 1")?;
+
+    let mut stmt = conn.prepare("INSERT INTO avatar_cache (key, value) VALUES (?,?)")?;
+    for (key, value) in map {
+        if exists_stmt.exists(params![key])? {
+            continue;
+        }
+        stmt.execute(params![key, value])?;
+    }
+    println!("Cached {} avatars", map.len());
     Ok(())
 }
 

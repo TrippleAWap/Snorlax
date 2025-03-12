@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use log::info;
 use rusqlite::params;
-use crate::cache::cache_windows_player::{cache_ids, get_avatar_ids, get_cache_path, get_cached_ids, walk_dir};
+use crate::cache::cache_windows_player::{cache_avatars, cache_ids, get_avatar_ids, get_cache_path, get_cached_ids, walk_dir};
 use crate::cache::db::CONN;
 use crate::cache::download_avatars::download_avatars;
 
@@ -14,12 +14,11 @@ pub const MIN_PER_THREAD: usize = 5; // minimum number of files a thread is allo
 pub async fn scrape(auth_cookie: Option<String>,) -> Result<Vec<String>, rusqlite::Error> {
     let mut ids = scrape_avatar_ids().await?;
     info!("Scraped {} avatar ids", ids.len());
-    info!("Downloading {} ids...", ids.len());
     if let Some(cookie) = auth_cookie {
         info!("Using auth cookie: {}", cookie);
         {
             let conn = CONN.lock().unwrap();
-            let mut stmt = conn.prepare("SELECT 1 FROM avatar_cache WHERE key =? LIMIT 1")?;
+            let mut stmt = conn.prepare("SELECT 1 FROM avatar_cache WHERE key = ? LIMIT 1")?;
             info!("Checking {} cached ids...", ids.len());
             for i in 0..ids.len() {
                 if i > ids.len() - 1 {
@@ -28,13 +27,14 @@ pub async fn scrape(auth_cookie: Option<String>,) -> Result<Vec<String>, rusqlit
                 let id = ids[i].clone();
                 let cached = stmt.exists(params![id])?;
                 if cached {
-                    info!("Skipping {} (already cached)", id);
                     ids.remove(i);
                     continue;
                 }
             }
             info!("Downloading {} ids...", ids.len());
         };
+        // insert all into cache;
+
         download_avatars(&ids, &cookie).await?;
     } else {
         info!("No auth cookie provided, skipping download");

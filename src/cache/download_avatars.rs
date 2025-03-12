@@ -1,12 +1,14 @@
 use std::cmp::{max, min};
+use std::collections::HashMap;
 use std::sync::Arc;
-use log::debug;
+use log::{info, warn};
 use reqwest::Client;
 use rusqlite::params;
 use serde_json;
 use tokio::sync::Mutex;
 use vrchatapi::apis::avatars_api::GetAvatarError;
 use vrchatapi::apis::{Error, ResponseContent};
+use crate::cache::cache_windows_player::cache_avatars;
 use crate::cache::db::CONN;
 use crate::cache::scrape::{MIN_PER_THREAD, SCRAPING_THREADS};
 
@@ -47,9 +49,13 @@ pub async fn download_avatars(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec
         let data_clone = Arc::clone(&data);
         let tkn_clone = tkn.to_string();
         threads.push(tokio::spawn(async move {
-            debug!("Downloading {} avatars...", target_ids);
+            info!("Downloading {} avatars...", target_ids);
             let avatars_data = download_avatars_(&paths_clone[..target_ids].to_vec(), &tkn_clone).await.expect("Failed to scrape avatar ids");
             let mut data = data_clone.lock().await;
+            cache_avatars(&HashMap::from_iter(avatars_data.clone().into_iter().map(|avatar| {
+                let json_str = serde_json::to_string(&avatar).unwrap();
+                (avatar.id.to_string(), json_str)
+            }))).expect("Failed to cache avatars");
             data.extend(avatars_data);
         }));
         avatar_ids.drain(..target_ids);
@@ -58,20 +64,10 @@ pub async fn download_avatars(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec
         thread.await.expect("Failed to join thread");
     }
     let data = data.lock().await;
-    let conn = CONN.lock().unwrap();
-    let mut stmt = conn.prepare("INSERT OR IGNORE INTO avatar_cache (key, value) VALUES (?,?)")?;
-    debug!("Inserting {} avatars into cache...", data.len());
-    for i in 0..data.len() {
-        let avatar = &data[i];
-        let json = serde_json::to_string(avatar).unwrap();
-        stmt.execute(params![avatar.id, json])?;
-    }
-    debug!("Done inserting avatars into cache.");
     Ok(data.to_vec())
 }
 
 async fn download_avatars_(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<vrchatapi::models::Avatar>, rusqlite::Error> {
-    debug!("Downloading {} avatars...", avatar_ids.len());
     let mut result = Vec::new();
     for avatar_id in avatar_ids {
         match download_avatar(avatar_id, tkn).await {
@@ -79,7 +75,7 @@ async fn download_avatars_(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<vr
                 result.push(avatar);
             }
             Err(e) => {
-                println!("Error downloading avatar {}: {}", avatar_id, e);
+                warn!("Failed to download avatar {} with error: {}", avatar_id, e)
             }
         }
     }
