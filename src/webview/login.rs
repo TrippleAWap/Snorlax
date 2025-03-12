@@ -11,11 +11,13 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::platform::windows::{WindowBuilderExtWindows, WindowExtWindows};
 use winit::window::{Icon, WindowBuilder};
 use std::process::{Command, exit};
+use tempfile::TempDir;
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let event_loop = EventLoop::new();
     let image = image::load_from_memory(include_bytes!("../static/icon.ico")).expect("failed to load icon");
     let icon = Icon::from_rgba(image.to_rgba8().into_raw(), image.width(), image.height()).expect("failed to create icon");
+
     let window = WindowBuilder::new()
         .with_title("Snorlax | Rust Release | github.com/TrippleAWap")
         .with_inner_size(Size::Logical((1600, 900).into()))
@@ -28,7 +30,11 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let create_result = {
         let controller_clone = controller.clone();
         let hwnd = window.hwnd() as HWND;
-        webview2::Environment::builder().build(move |env| {
+        let temp_dir: TempDir = TempDir::new()?;
+        let user_data_folder = temp_dir.path();
+        webview2::Environment::builder()
+            .with_user_data_folder(user_data_folder)
+            .build(move |env| {
             env.expect("env")
                 .create_controller(hwnd, move |controller| {
                     let controller = controller.expect("create host");
@@ -44,6 +50,10 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         let cookies = request.get_request().unwrap().get_headers().unwrap().get_header("Cookie").unwrap_or("".to_string());
                         // get auth;
                         let auth = cookies.split("; ").find(|cookie| cookie.starts_with("auth=")).map(|cookie| cookie.split("=").last().unwrap().to_string());
+                        let two_factor_auth = cookies.split("; ").find(|cookie| cookie.starts_with("twoFactorAuth=")).map(|cookie| cookie.split("=").last().unwrap().to_string());
+                        if two_factor_auth.is_none() {
+                            return Ok(());
+                        }
                         if let Some(auth) = auth {
                             let current_env = fs::read_to_string(".env").unwrap_or_default();
                             fs::write(".env", format!("{}\nAUTH_TOKEN={}", current_env, auth)).unwrap();

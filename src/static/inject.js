@@ -25,8 +25,8 @@ const fetchAvatarsSpecified = (ws, start, size) => {
     ws.send(JSON.stringify({ "event": "fetch_avatars", "data": { "start": start, "end": start + size } }))
 }
 
-const fetchAvatars = (ws) => {
-    fetchAvatarsSpecified(ws, window.page * PAGE_SIZE, PAGE_SIZE)
+const fetchAvatars = async (ws) => {
+    return fetchAvatarsSpecified(ws, window.page * PAGE_SIZE, PAGE_SIZE)
 }
 
 const toggleFavorites = async (state) => {
@@ -45,13 +45,16 @@ const updatePageNumber = (current) => {
     }
 }
 
-const handlePagination = (button, ws) => {
+const handlePagination = async (button, ws) => {
     if (button.disabled) {
         return;
     }
+    const pagination = document.querySelectorAll("div[class='pagination']>a");
+    pagination.forEach(b => b.disabled = true);
     const direction = button.dataset.direction;
     const current = window.page;
-    console.log(direction)
+    const grid = document.querySelector("div[id='avatar_grid']");
+    grid.innerHTML = "";
     switch (direction) {
         case "first":
             updatePageNumber(0);
@@ -66,7 +69,8 @@ const handlePagination = (button, ws) => {
             updatePageNumber(current + 1);
             break;
     }
-    fetchAvatars(ws);
+    await fetchAvatars(ws);
+    pagination.forEach(b => b.disabled = false);
 }
 const createSockets = async () =>  {
     await toggleFavorites(false)
@@ -82,16 +86,13 @@ const createSockets = async () =>  {
         switch (json.event) {
             case "avatars":
                 console.log(`Received ${json.data.total_count} avatars`);
-                window.pages = Math.max(Math.ceil(json.data.total_count / PAGE_SIZE) - 1, 0);
-                const entries = Math.min(PAGE_SIZE, json.data.avatars.length)
-                const childCount = grid.children.length + 1;
-                json.data.avatars.slice(0, entries).forEach(html => {
+                window.pages = Math.floor(json.data.total_count / PAGE_SIZE);
+                const htmlLength = grid.innerHTML.length;
+                for (const html of json.data.avatars) {
                     grid.insertAdjacentHTML("afterbegin", html)
-                });
-                for (let i = entries; i < childCount; i++) {
-                    grid.lastElementChild?.remove?.();
                 }
-                updatePageNumber(window.page, window.pages)
+                grid.innerHTML = grid.innerHTML.slice(0, grid.innerHTML.length - htmlLength);
+                updatePageNumber(window.page)
                 break;
             default:
                 console.error("Unknown event: " + json.event);

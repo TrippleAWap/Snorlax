@@ -31,7 +31,7 @@ pub async fn process_ws(ws: warp::ws::WebSocket)  {
                     // splice the avatars into the requested range
                     let total_count = avatars.len() as u64;
                     avatars = avatars.iter().skip(start as usize).take(end as usize).cloned().collect();
-                    let avatar_data = avatars.iter().map(|(_, avatar_id, avatar_value)| {
+                    let mut avatar_data = avatars.iter().map(|(_, avatar_id, avatar_value)| {
                         // Parse the JSON string from the cached avatar.
                         let avatar: vrchatapi::models::Avatar = serde_json::from_str(avatar_value)
                             .expect("Error parsing avatar JSON");
@@ -77,7 +77,7 @@ pub async fn process_ws(ws: warp::ws::WebSocket)  {
                         card_html = card_html.replace("{{platform_elements}}", &platform_elements);
                         card_html
                     }).collect::<Vec<String>>();
-
+                    avatar_data.reverse();
                     response = serde_json::json!({
                         "event": "avatars",
                         "data": serde_json::json!({

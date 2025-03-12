@@ -4,6 +4,7 @@ use once_cell::unsync::OnceCell;
 use std::env::args;
 use std::mem;
 use std::rc::Rc;
+use tempfile::TempDir;
 use webview2::Controller;
 use winapi::shared::windef::*;
 use winapi::um::winuser::*;
@@ -31,7 +32,11 @@ pub async fn run(port: u16) -> Result<(), Box<dyn std::error::Error>> {
     let create_result = {
         let controller_clone = controller.clone();
         let hwnd = window.hwnd() as HWND;
-        webview2::Environment::builder().build(move |env| {
+        let temp_dir: TempDir = TempDir::new()?;
+        let user_data_folder = temp_dir.path();
+        webview2::Environment::builder()
+            .with_user_data_folder(user_data_folder)
+            .build(move |env| {
             env.expect("env")
                 .create_controller(hwnd, move |controller| {
                     let controller = controller.expect("create host");
