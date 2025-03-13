@@ -17,10 +17,11 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     init_db("dir_to_id").expect("Error initializing dir_to_id database");
     init_db("avatar_favorites").expect("Error initializing favorite_avatar database");
     println!("Cache loaded successfully!");
+    download_dbs().await?;
     loop {
+
         scrape(std::env::var("AUTH_TOKEN").ok()).await.expect("Error scraping data");
         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
     }
-    Ok(())
 }
 

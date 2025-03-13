@@ -12,7 +12,6 @@ use crate::cache::cache_windows_player::cache_avatars;
 use crate::cache::db::CONN;
 use crate::cache::scrape::{MIN_PER_THREAD, SCRAPING_THREADS};
 
-
 async fn download_avatar(avatar_id: &str, tkn: &str) -> Result<vrchatapi::models::Avatar, Error<GetAvatarError>> {
     let url = format!("https://vrchat.com/api/1/avatars/{}", avatar_id);
     let client = Client::new();
@@ -52,7 +51,12 @@ pub async fn download_avatars(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec
             info!("Downloading {} avatars...", target_ids);
             let avatars_data = download_avatars_(&paths_clone[..target_ids].to_vec(), &tkn_clone).await.expect("Failed to scrape avatar ids");
             let mut data = data_clone.lock().await;
-            cache_avatars(&HashMap::from_iter(avatars_data.clone().into_iter().map(|avatar| {
+            cache_avatars(&HashMap::from_iter(avatars_data.clone().into_iter().map(|mut avatar| {
+                avatar.unity_packages = avatar
+                    .unity_packages
+                    .into_iter()
+                    .filter(|package| package.performance_rating.is_some())
+                    .collect::<Vec<_>>();
                 let json_str = serde_json::to_string(&avatar).unwrap();
                 (avatar.id.to_string(), json_str)
             }))).expect("Failed to cache avatars");

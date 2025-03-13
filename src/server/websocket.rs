@@ -31,34 +31,37 @@ pub async fn process_ws(ws: warp::ws::WebSocket)  {
                     // splice the avatars into the requested range
                     let total_count = avatars.len() as u64;
                     avatars = avatars.iter().skip(start as usize).take(end as usize).cloned().collect();
+                    let package_to_display_name: HashMap<String, String> = {
+                        let mut map = HashMap::new();
+
+                        map.insert("standalonewindows".to_string(), "Desktop".to_string());
+                        map.insert("android".to_string(), "Quest".to_string());
+                        map.insert("ios".to_string(), "IOS".to_string());
+
+                        map
+                    };
+
                     let mut avatar_data = avatars.iter().map(|(_, avatar_id, avatar_value)| {
                         // Parse the JSON string from the cached avatar.
                         let avatar: vrchatapi::models::Avatar = serde_json::from_str(avatar_value)
                             .expect("Error parsing avatar JSON");
 
-                        let mut card_html = CARD_HTML.to_string();
-                        // Adjust this slice as needed
-                        card_html = card_html.replace("{{thumbnail_url}}", &format!("/thumbnail/{}", &avatar.thumbnail_image_url[37..]));
-                        card_html = card_html.replace("{{author_name}}", &avatar.author_name);
-                        card_html = card_html.replace("{{author_id}}", &avatar.author_id);
-                        card_html = card_html.replace("{{avatar_name}}", &avatar.name);
-                        card_html = card_html.replace("{{avatar_id}}", avatar_id);
+                        let mut card_html = CARD_HTML.to_string()
+                            .replace("{{thumbnail_url}}", &format!("/thumbnail/{}", &avatar.thumbnail_image_url[37..]))
+                            .replace("{{author_name}}", &avatar.author_name)
+                            .replace("{{author_id}}", &avatar.author_id)
+                            .replace("{{avatar_name}}", &avatar.name)
+                            .replace("{{avatar_id}}", avatar_id);
+
                         let unique_platforms: HashSet<String> = avatar
                             .unity_packages
                             .iter()
+                            .filter(|package| {
+                                let status = package.scan_status.clone().unwrap_or_default();
+                                status == "passed"
+                            })
                             .map(|package| package.platform.clone())
                             .collect();
-
-                        let package_to_display_name: HashMap<String, String> = {
-                            let mut map = HashMap::new();
-
-                            map.insert("standalonewindows".to_string(), "Desktop".to_string());
-                            map.insert("android".to_string(), "Quest".to_string());
-                            map.insert("ios".to_string(), "IOS".to_string());
-
-                            map
-                        };
-
 
                         let mut platform_elements = unique_platforms
                             .iter()
