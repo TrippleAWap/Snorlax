@@ -3,16 +3,15 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use log::{info, warn};
 use reqwest::Client;
-use rusqlite::params;
 use serde_json;
 use tokio::sync::Mutex;
 use vrchatapi::apis::avatars_api::GetAvatarError;
 use vrchatapi::apis::{Error, ResponseContent};
+use vrchatapi::models::Avatar;
 use crate::cache::cache_windows_player::cache_avatars;
-use crate::cache::db::CONN;
 use crate::cache::scrape::{MIN_PER_THREAD, SCRAPING_THREADS};
 
-async fn download_avatar(avatar_id: &str, tkn: &str) -> Result<vrchatapi::models::Avatar, Error<GetAvatarError>> {
+async fn download_avatar(avatar_id: &str, tkn: &str) -> Result<Avatar, Error<GetAvatarError>> {
     let url = format!("https://vrchat.com/api/1/avatars/{}", avatar_id);
     let client = Client::new();
     let response = client.get(&url)
@@ -38,7 +37,7 @@ async fn download_avatar(avatar_id: &str, tkn: &str) -> Result<vrchatapi::models
     }
 }
 
-pub async fn download_avatars(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<vrchatapi::models::Avatar>, rusqlite::Error> {
+pub async fn download_avatars(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<Avatar>, rusqlite::Error> {
     let mut avatar_ids = avatar_ids.clone();
     let data = Arc::new(Mutex::new(vec![]));
     let mut threads = Vec::new();
@@ -59,7 +58,7 @@ pub async fn download_avatars(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec
                     .collect::<Vec<_>>();
                 let json_str = serde_json::to_string(&avatar).unwrap();
                 (avatar.id.to_string(), json_str)
-            }))).expect("Failed to cache avatars");
+            }))).await.expect("Failed to cache avatars");
             data.extend(avatars_data);
         }));
         avatar_ids.drain(..target_ids);
@@ -71,7 +70,7 @@ pub async fn download_avatars(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec
     Ok(data.to_vec())
 }
 
-async fn download_avatars_(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<vrchatapi::models::Avatar>, rusqlite::Error> {
+async fn download_avatars_(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<Avatar>, rusqlite::Error> {
     let mut result = Vec::new();
     for avatar_id in avatar_ids {
         match download_avatar(avatar_id, tkn).await {
@@ -79,7 +78,10 @@ async fn download_avatars_(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<vr
                 result.push(avatar);
             }
             Err(e) => {
-                warn!("Failed to download avatar {} with error: {}", avatar_id, e)
+                warn!("Failed to download avatar {} with error: {}", avatar_id, e);
+                // TODO: make another db that has invalid ids to stop retrying
+                // for now, just skip the avatar | we cant do this cuz we query for all avatars so we get empty avatars on the frontend
+                // result.push(Avatar { id: avatar_id.to_string(), ..Default::default() });
             }
         }
     }

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
 use lazy_regex::{lazy_regex, Lazy, Regex};
-use rusqlite::{params, OptionalExtension};
+use rusqlite::params;
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use crate::cache::db::CONN;
@@ -20,8 +20,8 @@ pub fn get_cache_path() -> String {
 }
 
 #[allow(dead_code)]
-pub fn cache_ids(map: &HashMap<String, String>) -> Result<(), rusqlite::Error>{
-    let conn = CONN.lock().unwrap();
+pub async fn cache_ids(map: &HashMap<String, String>) -> Result<(), rusqlite::Error>{
+    let conn = CONN.lock().await;
     let mut stmt = conn.prepare("INSERT INTO dir_to_id (key, value) VALUES (?,?)")?;
     for (key, value) in map {
         stmt.execute(params![key, value])?;
@@ -29,8 +29,8 @@ pub fn cache_ids(map: &HashMap<String, String>) -> Result<(), rusqlite::Error>{
     Ok(())
 }
 
-pub fn cache_avatars(map: &HashMap<String, String>) -> Result<(), rusqlite::Error>{
-    let conn = CONN.lock().unwrap();
+pub async fn cache_avatars(map: &HashMap<String, String>) -> Result<(), rusqlite::Error>{
+        let conn = CONN.lock().await;
     let mut exists_stmt = conn.prepare("SELECT 1 FROM avatar_cache WHERE key = ? LIMIT 1")?;
 
     let mut stmt = conn.prepare("INSERT INTO avatar_cache (key, value) VALUES (?,?)")?;
@@ -44,8 +44,8 @@ pub fn cache_avatars(map: &HashMap<String, String>) -> Result<(), rusqlite::Erro
     Ok(())
 }
 
-pub fn get_cached_ids() -> Result<HashMap<String, String>, rusqlite::Error> {
-    let conn = CONN.lock().unwrap();
+pub async fn get_cached_ids() -> Result<HashMap<String, String>, rusqlite::Error> {
+    let conn = CONN.lock().await;
     let mut stmt = conn.prepare("SELECT key, value FROM dir_to_id")?;
     let mut rows = stmt.query_map([], |row| {
         Ok((row.get::<usize, String>(0)?, row.get::<usize, String>(1)?))

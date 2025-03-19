@@ -28,8 +28,9 @@ const fetchAvatarsSpecified = (ws, start, size) => {
 const fetchAvatars = async (ws) => {
     return fetchAvatarsSpecified(ws, window.page * PAGE_SIZE, PAGE_SIZE)
 }
-
+let fav = false;
 const toggleFavorites = async (state) => {
+    fav = state;
     await fetch("/api/favorites", {
         method: "POST",
         body: state.toString()
@@ -85,7 +86,9 @@ const createSockets = async () =>  {
             return console.error("Could not find avatar grid");
         switch (json.event) {
             case "avatars":
+                const count_display = document.querySelector(`span[id='${fav ? "avatar_count_favorites" : "avatar_count_overview"}']`);
                 console.log(`Received ${json.data.total_count} avatars`);
+                count_display.textContent = json.data.total_count;
                 window.pages = Math.floor(json.data.total_count / PAGE_SIZE);
                 const htmlLength = grid.innerHTML.length;
                 for (const html of json.data.avatars) {
@@ -108,7 +111,7 @@ const createSockets = async () =>  {
         if (ws.readyState === WebSocket.OPEN) {
             fetchAvatars(ws);
         }
-    }, 5000);
+    }, 1000);
     return ws;
 }
 

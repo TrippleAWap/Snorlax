@@ -23,9 +23,9 @@ pub async fn process_ws(ws: warp::ws::WebSocket)  {
                     let start = data.get("start").expect("Error").as_u64().expect("Error");
                     let end = data.get("end").expect("Error").as_u64().expect("Error");
 
-                    let conn = CONN.lock().unwrap();
+                    let conn = CONN.lock().await;
                     let filter_string = FILTER_STRING.lock().unwrap().clone();
-                    let favorites = FAVORITE_FILTER.lock().unwrap();
+                    let favorites = FAVORITE_FILTER.lock().await;
 
                     let mut avatars = query_avatar_cache(&conn, if filter_string.is_empty() { None } else { Some(filter_string) }, *favorites).expect("Error querying avatar cache");
                     // splice the avatars into the requested range
@@ -47,7 +47,7 @@ pub async fn process_ws(ws: warp::ws::WebSocket)  {
                             .expect("Error parsing avatar JSON");
 
                         let mut card_html = CARD_HTML.to_string()
-                            .replace("{{thumbnail_url}}", &format!("/thumbnail/{}", &avatar.thumbnail_image_url[37..]))
+                            .replace("{{thumbnail_url}}", &uri_encode::encode_uri_component(&avatar.thumbnail_image_url))
                             .replace("{{author_name}}", &avatar.author_name)
                             .replace("{{author_id}}", &avatar.author_id)
                             .replace("{{avatar_name}}", &avatar.name)

@@ -5,6 +5,7 @@ mod login;
 mod filter;
 mod favorites;
 
+use std::collections::HashMap;
 use rusqlite::{params, Connection};
 use std::error::Error;
 use log::info;
@@ -42,11 +43,17 @@ pub async fn run(port: u16) -> Result<(), Box<dyn Error>> {
         .and(warp::post())
         .and(warp::body::bytes())
         .and_then(favorites::handle_update_favorites);
+
     let favorite_route = warp::path!("api" / "favorite" / String)
         .and(warp::post())
         .and_then(favorites::handle_favorite_avatar);
 
-    let thumbnail_route = warp::path!("thumbnail" / String / u32 / u32)
+    let unfavorite_route = warp::path!("api" / "favorite" / String)
+        .and(warp::delete())
+        .and_then(favorites::handle_unfavorite_avatar);
+
+    let thumbnail_route = warp::path!("thumbnail")
+        .and(warp::query::<HashMap<String, String>>())
         .and_then(thumbnail::handle_thumbnail);
     
     let equip_route = warp::path!("api" / "avatar" / "equip" / String)
@@ -65,7 +72,8 @@ pub async fn run(port: u16) -> Result<(), Box<dyn Error>> {
         .or(login_route)
         .or(filter_update_route)
         .or(filter_favorites_route)
-        .or(favorite_route);
+        .or(favorite_route)
+        .or(unfavorite_route);
 
     let addr = ([127, 0, 0, 1], port);
     println!("Server running on http://127.0.0.1:{}", addr.1);

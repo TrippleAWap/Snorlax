@@ -1,13 +1,14 @@
 use rusqlite::{params, Connection, Result};
 use log::info;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 use lazy_static::lazy_static;
+
 lazy_static! {
     pub static ref CONN: Mutex<Connection> = Mutex::new(Connection::open("./cache.db").unwrap());
 }
 
-pub fn init_db(table: &str) -> Result<()> {
-    let conn = CONN.lock().unwrap();
+pub async fn init_db(table: &str) -> Result<()> {
+    let conn = CONN.lock().await;
     conn.execute(
         &format!("CREATE TABLE IF NOT EXISTS {} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,3 +23,4 @@ pub fn init_db(table: &str) -> Result<()> {
 
     Ok(())
 }
+

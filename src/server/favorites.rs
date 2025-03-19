@@ -1,6 +1,6 @@
 use warp::{Rejection, Reply};
 use warp::http::Response;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 use once_cell::sync::Lazy;
 use rusqlite::{params, Error};
 use warp::hyper::body::Bytes;
@@ -14,7 +14,7 @@ pub async fn handle_update_favorites(
         Ok(state) => state,
         Err(_) => Err(warp::reject::not_found())?,
     };
-    let mut favorite_filter = FAVORITE_FILTER.lock().unwrap();
+    let mut favorite_filter = FAVORITE_FILTER.lock().await;
     if state == "true" {
         *favorite_filter = true;
     } else {
@@ -31,6 +31,7 @@ pub async fn handle_favorite_avatar(
         Err(_) => Ok(Response::builder().status(404).body(format!("Avatar {} not found", avatar_id)).unwrap())
     }
 }
+
 pub async fn handle_unfavorite_avatar(
     avatar_id: String
 ) -> Result<impl Reply, Rejection> {
@@ -41,7 +42,7 @@ pub async fn handle_unfavorite_avatar(
 }
 
 pub async fn unfavorite_avatar_id(avatar_id: String) -> Result<(), Error> {
-    let conn = CONN.lock().unwrap();
+    let conn = CONN.lock().await;
 
     conn.execute(
         "DELETE FROM avatar_favorites WHERE key = ?",
@@ -52,7 +53,7 @@ pub async fn unfavorite_avatar_id(avatar_id: String) -> Result<(), Error> {
 }
 
 pub async fn favorite_avatar_id(avatar_id: String) -> Result<(), Error> {
-    let conn = CONN.lock().unwrap();
+    let conn = CONN.lock().await;
 
     let avatar_data = conn.query_row(
         "SELECT * FROM avatar_cache WHERE key = ? LIMIT 1",

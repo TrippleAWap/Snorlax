@@ -36,7 +36,10 @@
         }
 
         .main-content {
-            background-color: rgb(8, 8, 8)
+            background-color: rgb(8, 8, 8);
+            flex-direction: column;
+            height: 100vh;
+            justify-content: space-between;
         }
 
         .text-foreground\/70 {
@@ -149,7 +152,7 @@
 
         .card-container {
             overflow-y: scroll;
-            height: 77.5vh;
+            height: 80vh;
             scrollbar-width: thin;
             scrollbar-color: rgba(198, 83, 83, 0.5) rgba(0, 0, 0, 0.8);
             padding-right: 0;
@@ -180,6 +183,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            align-self: center;
         }
 
         .pagination a {
@@ -251,12 +255,14 @@
                        data-title="Overview" data-icon="fas fa-chart-area">
                         <i class="fas fa-chart-area w-[1em] h-[1em] mr-1"></i>
                         <span class="font-medium">Overview</span>
+                        <span class="text-xs flex-1 text-right" id="avatar_count_overview">0</span>
                     </a>
                     <a href="#"
                        class="nav-link text-foreground/70 block px-3 py-2 rounded-md hover:text-white flex items-center space-x-2"
                        data-title="Favorites" data-icon="fas fa-star">
                         <i class="fas fa-star w-[1em] h-[1em] mr-1"></i>
                         <span class="font-medium">Favorites</span>
+                        <span class="text-xs flex-1 text-right" id="avatar_count_favorites">0</span>
                     </a>
                 </div>
             </div>
