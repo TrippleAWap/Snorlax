@@ -83,7 +83,7 @@ pub async fn run(port: u16) -> Result<(), Box<dyn Error>> {
 }
 const CARD_HTML : &str = include_str!("../static/card.html");
 
-fn map_row(row: &rusqlite::Row) -> rusqlite::Result<(i64, String, String)> {
+pub(crate) fn map_row(row: &rusqlite::Row) -> rusqlite::Result<(i64, String, String)> {
     Ok((row.get(0)?, row.get(1)?, row.get(2)?))
 }
 

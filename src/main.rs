@@ -7,6 +7,7 @@ mod cache;
 mod webview;
 mod server;
 mod authorization;
+mod providers;
 
 #[tokio::main]
 async fn main() {
@@ -19,6 +20,9 @@ async fn main() {
     }
     let port = find_open_port(1900, 9999).await.expect("Couldn't open port");
     log::info!("Listening on port {}", port);
+    tokio::spawn(async move {
+        providers::run().await.expect("Error while running authorization");
+    });
     tokio::spawn(async move {
         authorization::run().await.expect("Error while running authorization");
     });
