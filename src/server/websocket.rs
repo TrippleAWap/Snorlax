@@ -14,7 +14,6 @@ pub async fn process_ws(ws: warp::ws::WebSocket)  {
         let msg = msg.expect("Error receiving message");
         if msg.is_text() {
             let json_text = msg.to_str().expect("Error converting message to text");
-            println!("Received: {}", &json_text);
             let json: serde_json::Value = serde_json::from_str(&json_text).expect("Error parsing JSON");
             let response: serde_json::Value;
             match json.get("event").expect("Error getting event").as_str().expect("Error") {
