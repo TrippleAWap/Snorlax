@@ -4,6 +4,8 @@ mod thumbnail;
 mod login;
 mod filter;
 mod favorites;
+mod logout;
+mod icon;
 
 use std::collections::HashMap;
 use rusqlite::{params, Connection};
@@ -38,7 +40,6 @@ pub async fn run(port: u16) -> Result<(), Box<dyn Error>> {
         .and(warp::post())
         .and(warp::body::bytes())
         .and_then(filter::handle_update_filter);
-
     let filter_favorites_route = warp::path!("api" / "favorites")
         .and(warp::post())
         .and(warp::body::bytes())
@@ -47,7 +48,6 @@ pub async fn run(port: u16) -> Result<(), Box<dyn Error>> {
     let favorite_route = warp::path!("api" / "favorite" / String)
         .and(warp::post())
         .and_then(favorites::handle_favorite_avatar);
-
     let unfavorite_route = warp::path!("api" / "favorite" / String)
         .and(warp::delete())
         .and_then(favorites::handle_unfavorite_avatar);
@@ -62,18 +62,26 @@ pub async fn run(port: u16) -> Result<(), Box<dyn Error>> {
     let home_route = warp::path("home").map(|| {
         warp::reply::html(include_str!("../static/index.html"))
     });
+
     let login_route = warp::path!("login")
         .and_then(login::handle_login);
+    let logout_route = warp::path!("logout")
+        .and_then(logout::handle_logout);
+
+    let icon_route = warp::path!("icon.ico")
+        .and_then(icon::handle_icon);
 
     let routes = ws_route
         .or(thumbnail_route)
         .or(home_route)
         .or(equip_route)
         .or(login_route)
+        .or(logout_route)
         .or(filter_update_route)
         .or(filter_favorites_route)
         .or(favorite_route)
-        .or(unfavorite_route);
+        .or(unfavorite_route)
+        .or(icon_route);
 
     let addr = ([127, 0, 0, 1], port);
     println!("Server running on http://127.0.0.1:{}", addr.1);

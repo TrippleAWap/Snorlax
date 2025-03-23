@@ -35,3 +35,6 @@ tempfile = "3.17.1"
 notify = "8.0.0"
 crossbeam = "0.8.4"
 uri_encode = "1.0.3"
+
+[build-dependencies]
+winres = "0.1.12"

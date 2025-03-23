@@ -25,10 +25,9 @@ pub async fn handle_update_favorites(
 pub async fn handle_favorite_avatar(
     avatar_id: String
 ) -> Result<impl Reply, Rejection> {
-    println!("{}", avatar_id);
     match favorite_avatar_id(avatar_id.clone()).await {
         Ok(_) => Ok(Response::new(format!("Avatar {} added to favorites", avatar_id))),
-        Err(_) => Ok(Response::builder().status(404).body(format!("Avatar {} not found", avatar_id)).unwrap())
+        Err(e) => Ok(Response::builder().status(404).body(format!("Avatar {} not found: {:?}", avatar_id, e)).unwrap())
     }
 }
 
@@ -61,7 +60,6 @@ pub async fn favorite_avatar_id(avatar_id: String) -> Result<(), Error> {
         |row| {
             Ok((row.get::<_, i32>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?))
         })?;
-    println!("{:?}", avatar_data);
     conn.execute(
         "INSERT INTO avatar_favorites (key, value) VALUES (?,?)",
         params![avatar_data.1, avatar_data.2],

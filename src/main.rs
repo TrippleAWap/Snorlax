@@ -6,7 +6,6 @@ use crate::webview::login;
 mod cache;
 mod webview;
 mod server;
-mod authorization;
 mod providers;
 
 #[tokio::main]
@@ -21,16 +20,15 @@ async fn main() {
     let port = find_open_port(1900, 9999).await.expect("Couldn't open port");
     log::info!("Listening on port {}", port);
     tokio::spawn(async move {
-        providers::run().await.expect("Error while running authorization");
-    });
-    tokio::spawn(async move {
-        authorization::run().await.expect("Error while running authorization");
+        server::run(port).await.expect("Error while running websockets");
     });
     tokio::spawn(async move {
         cache::run().await.expect("Error while running cache");
     });
     tokio::spawn(async move {
-        server::run(port).await.expect("Error while running websockets");
+        providers::run().await.expect("Error while running authorization");
     });
+    // wait for server to start
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
     webview::run(port).await.expect("Error while running webview");
 }

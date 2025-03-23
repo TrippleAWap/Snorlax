@@ -31,7 +31,8 @@
                             console.error('Error:', response.statusText);
                             return;
                         }
-                        element.color = 'yellow';
+                        element.fill = 'yellow';
+                        element.stroke = 'yellow';
                     }).catch(error => {
                         console.error(error);
                     });

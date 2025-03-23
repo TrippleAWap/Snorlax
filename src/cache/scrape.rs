@@ -119,22 +119,17 @@ pub type WatchResponse = (Sender<PathBuf>, Receiver<PathBuf>, PollWatcher);
 /// Will return `Err` if `PollWatcher::watch` errors
 pub fn watch<P: AsRef<Path>>(path: P) -> notify::Result<WatchResponse> {
     let (tx_a, rx_a) = crossbeam::channel::unbounded();
-    let (tx_b, tx_c) = (tx_a.clone(), tx_a.clone());
+    let tx_b = tx_a.clone();
 
-    let mut watcher = PollWatcher::with_initial_scan(
+    let mut watcher = PollWatcher::new(
         move |watch_event: notify::Result<Event>| {
             if let Ok(event) = watch_event {
                 for path in event.paths {
-                    let _ = tx_c.send(path);
+                    let _ = tx_b.send(path);
                 }
             }
         },
         Config::default(),
-        move |scan_event: notify::Result<PathBuf>| {
-            if let Ok(path) = scan_event {
-                let _ = tx_b.send(path);
-            }
-        },
     )?;
 
     watcher.watch(path.as_ref(), RecursiveMode::Recursive)?;

@@ -45,7 +45,6 @@ const updatePageNumber = (current) => {
         pageNumber.textContent = `Page ${current + 1} of ${window.pages + 1}`;
     }
 }
-
 const handlePagination = async (button, ws) => {
     if (button.disabled) {
         return;
@@ -119,6 +118,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     fetch("/login", { method: "GET" }).then(r => r.json()).then(data => {
         const profile_pic = document.querySelector("img[id='profile_pic']");
         profile_pic.src = data.userIcon;
+        console.log(data.userIcon.toString(), data.userIcon)
+        if (data.userIcon === "") {
+            console.log("No profile picture found")
+            profile_pic.parentElement.remove();
+        }
         const username = document.querySelector("span[id='username']");
         username.textContent = data.displayName;
         console.log(data);

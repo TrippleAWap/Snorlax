@@ -1,7 +1,8 @@
 use crate::providers::provider::{DatabaseEntry, Provider};
 use rusqlite::{Connection, Error, params};
 use std::fmt::Debug;
-use std::time::Instant;
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use tokio::fs;
 use tokio::sync::Mutex;
 
 #[derive(Debug)]
@@ -124,7 +125,9 @@ impl Provider for PrismicProvider {
             avatar_name TEXT NOT NULL,
             avatar_description TEXT NOT NULL,
 
-            author_id TEXT NOT NULL
+            author_id TEXT NOT NULL,
+
+            insertion_timestamp TEXT DEFAULT CURRENT_TIMESTAMP
         )",
                 self.table_name
             ),
@@ -198,10 +201,32 @@ impl Provider for PrismicProvider {
 
     async fn spawn_thread(&self) -> () {
         println!("Fetching data from Prismic...");
-        let mut db = get_prismic_database().await;
+        // check the last time the database was updated, if it was TODAY, skip updating the database
+        let metadata = fs::metadata("prismic.db").await;
+        if metadata.is_ok() {
+            let metadata = metadata.unwrap();
+            let last_modified = metadata.modified().unwrap();
+            let last_modified_time = last_modified.duration_since(UNIX_EPOCH).unwrap();
+            let last_modified_day = last_modified_time.as_secs() / (60 * 60 * 24);
+            let current_day = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() / (60 * 60 * 24);
+            println!("Current day: {}", current_day);
+            println!("Last modified: {}", last_modified_day);
+            if last_modified_day == current_day {
+                println!("Database is up-to-date, skipping update.");
+                return;
+            }
+        }
+        let db = get_prismic_database().await;
         println!("Adding {} entries to the database...", db.len());
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-        self.add_entries(db).await.unwrap();
+        // get entries;
+        let entries = self.get_entries().await.unwrap();
+        let unique_entries: Vec<DatabaseEntry> = db
+           .into_iter()
+           .filter(|entry| !entries.iter().any(|e| e.avatar_id == entry.avatar_id))
+           .collect();
+        println!("Adding {} new entries to the database...", unique_entries.len());
+        self.add_entries(unique_entries).await.unwrap();
         println!("Database updated successfully!");
     }
 }
