@@ -13,7 +13,9 @@ pub async fn init_db(table: &str) -> Result<()> {
         &format!("CREATE TABLE IF NOT EXISTS {} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             key TEXT UNIQUE NOT NULL,
-            value TEXT NOT NULL
+            value TEXT NOT NULL,
+
+            insertion_timestamp TEXT DEFAULT CURRENT_TIMESTAMP
         )", table),
         params![],
     ).expect("Error creating {} table");

@@ -100,7 +100,7 @@ async fn scrape_avatar_ids() -> Result<HashMap<String, String>, rusqlite::Error>
             info!("Scraped {} ids from paths", ids_.len());
             let mut ids = ids_clone.lock().await;
             info!("Extending ids with {} ids", ids_.len());
-            tokio::spawn(process_avatars(std::env::var("AUTH_TOKEN").ok(), ids_.clone()));
+            // tokio::spawn(process_avatars(std::env::var("AUTH_TOKEN").ok(), ids_.clone()));
             ids.extend(ids_);
         }));
     }
