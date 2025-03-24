@@ -5,6 +5,8 @@ use crate::server::{query_avatar_cache, CARD_HTML};
 use std::sync::Mutex;
 use once_cell::sync::Lazy;
 use crate::server::favorites::FAVORITE_FILTER;
+use crate::vrchat_api::avatar::Avatar;
+
 pub static FILTER_STRING: Lazy<Mutex<String>> = Lazy::new(|| Mutex::new(String::new()));
 
 pub async fn process_ws(ws: warp::ws::WebSocket)  {
@@ -40,9 +42,9 @@ pub async fn process_ws(ws: warp::ws::WebSocket)  {
                         map
                     };
 
-                    let mut avatar_data = avatars.iter().map(|(_, avatar_id, avatar_value)| {
+                    let mut avatar_data = avatars.iter().map(|(_, avatar_id, avatar_value, _)| {
                         // Parse the JSON string from the cached avatar.
-                        let avatar: vrchatapi::models::Avatar = serde_json::from_str(avatar_value)
+                        let avatar: Avatar = serde_json::from_str(avatar_value)
                             .expect("Error parsing avatar JSON");
 
                         let mut card_html = CARD_HTML.to_string()
@@ -50,7 +52,11 @@ pub async fn process_ws(ws: warp::ws::WebSocket)  {
                             .replace("{{author_name}}", &avatar.author_name)
                             .replace("{{author_id}}", &avatar.author_id)
                             .replace("{{avatar_name}}", &avatar.name)
-                            .replace("{{avatar_id}}", avatar_id);
+                            .replace("{{avatar_id}}", avatar_id)
+                            .replace("{{star_color}}", match avatar.is_favorite.unwrap_or(0) {
+                                1 => "yellow",
+                                _ => "white"
+                            });
 
                         let unique_platforms: HashSet<String> = avatar
                             .unity_packages

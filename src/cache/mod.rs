@@ -4,10 +4,10 @@ use crate::cache::cache_windows_player::{get_avatar_ids, get_cache_path};
 use crate::cache::db::init_db;
 use crate::cache::scrape::{process_avatars, scrape, watch};
 
-mod cache_windows_player;
-pub(crate) mod db;
-mod scrape;
-mod download_avatars;
+pub mod cache_windows_player;
+pub mod db;
+pub mod scrape;
+pub mod download_avatars;
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     println!("Cache module running...");
@@ -17,7 +17,6 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     init_db("avatar_cache").await.expect("Error initializing avatar_cache database");
     // dir path -> avatar id ( removes the process of opening a handle and searching the file )
     init_db("dir_to_id").await.expect("Error initializing dir_to_id database");
-    init_db("avatar_favorites").await.expect("Error initializing favorite_avatar database");
     println!("Cache loaded successfully!");
     // TODO: implement in-memory sqlite db for Prismic, etc.
     // download_dbs().await?;

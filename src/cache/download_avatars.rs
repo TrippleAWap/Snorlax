@@ -7,7 +7,7 @@ use serde_json;
 use tokio::sync::Mutex;
 use vrchatapi::apis::avatars_api::GetAvatarError;
 use vrchatapi::apis::{Error, ResponseContent};
-use vrchatapi::models::Avatar;
+use crate::vrchat_api::avatar::Avatar;
 use crate::cache::cache_windows_player::cache_avatars;
 use crate::cache::scrape::{MIN_PER_THREAD, SCRAPING_THREADS};
 
@@ -24,7 +24,32 @@ async fn download_avatar(avatar_id: &str, tkn: &str) -> Result<Avatar, Error<Get
     let content = response.text().await?;
 
     if !status.is_client_error() && !status.is_server_error() {
-        serde_json::from_str(&content).map_err(Error::from)
+        match serde_json::from_str::<Avatar>(&content).map_err(|e| Error::from(e)) {
+            Ok(mut a) => {
+                let package_to_display_name = {
+                    let mut map = HashMap::new();
+
+                    map.insert("standalonewindows", "Desktop");
+                    map.insert("android", "Quest");
+                    map.insert("ios", "IOS");
+
+                    map
+                };
+                a.unity_packages = a
+                        .unity_packages
+                        .into_iter()
+                        .filter(|package| package.performance_rating.is_some())
+                        .map(|mut package| {
+                            let platform = package.platform.as_str();
+                            let display_name = package_to_display_name.get(platform).unwrap_or(&platform);
+                            package.platform = display_name.to_string();
+                            package
+                        })
+                        .collect::<Vec<_>>();
+                Ok(a)
+            }
+            Err(e) => Err(Error::from(e)),
+        }
     } else {
         let entity: Option<GetAvatarError> =
             serde_json::from_str(&content).ok();
@@ -50,12 +75,12 @@ pub async fn download_avatars(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec
             info!("Downloading {} avatars...", target_ids);
             let avatars_data = download_avatars_(&paths_clone[..target_ids].to_vec(), &tkn_clone).await.expect("Failed to scrape avatar ids");
             let mut data = data_clone.lock().await;
-            cache_avatars(&HashMap::from_iter(avatars_data.clone().into_iter().map(|mut avatar| {
-                avatar.unity_packages = avatar
-                    .unity_packages
-                    .into_iter()
-                    .filter(|package| package.performance_rating.is_some())
-                    .collect::<Vec<_>>();
+
+            cache_avatars(&HashMap::from_iter(avatars_data.clone().into_iter().map(|avatar| {
+                if avatar.updated_at.is_empty() {
+                    warn!("Avatar {} has no updated_at field, setting data to \"ERROR\"", avatar.id);
+                    return (avatar.id.to_string(), "ERROR".to_string());
+                }
                 let json_str = serde_json::to_string(&avatar).unwrap();
                 (avatar.id.to_string(), json_str)
             }))).await.expect("Failed to cache avatars");
@@ -80,8 +105,7 @@ async fn download_avatars_(avatar_ids: &Vec<String>, tkn: &str) -> Result<Vec<Av
             Err(e) => {
                 warn!("Failed to download avatar {} with error: {}", avatar_id, e);
                 // TODO: make another db that has invalid ids to stop retrying
-                // for now, just skip the avatar | we cant do this cuz we query for all avatars so we get empty avatars on the frontend
-                // result.push(Avatar { id: avatar_id.to_string(), ..Default::default() });
+                result.push(Avatar { id: avatar_id.to_string(), ..Default::default() });
             }
         }
     }

@@ -110,7 +110,7 @@ const createSockets = async () =>  {
         if (ws.readyState === WebSocket.OPEN) {
             fetchAvatars(ws);
         }
-    }, 1000);
+    }, 2500);
     return ws;
 }
 

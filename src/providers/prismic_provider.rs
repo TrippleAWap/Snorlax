@@ -127,7 +127,7 @@ impl Provider for PrismicProvider {
 
             author_id TEXT NOT NULL,
 
-            insertion_timestamp TEXT DEFAULT CURRENT_TIMESTAMP
+            timestamp TEXT DEFAULT CURRENT_TIMESTAMP
         )",
                 self.table_name
             ),
@@ -139,16 +139,19 @@ impl Provider for PrismicProvider {
         &self.database_connection
     }
 
-    async fn get_entries(&self) -> Result<Vec<DatabaseEntry>, Error> {
+    async fn get_entries(&self) -> Result<Vec<(DatabaseEntry, String)>, Error> {
         let conn = self.database_connection().lock().await;
         let mut stmt = conn.prepare(&format!("SELECT * FROM {}", self.table_name))?;
         let entries = stmt.query_map(params![], |row| {
-            Ok(DatabaseEntry {
-                avatar_id: row.get(0)?,
-                avatar_name: row.get(1)?,
-                avatar_description: row.get(2)?,
-                author_id: row.get(3)?,
-            })
+            Ok((
+                DatabaseEntry {
+                    avatar_id: row.get(1)?,
+                    avatar_name: row.get(2)?,
+                    avatar_description: row.get(3)?,
+                    author_id: row.get(4)?,
+                },
+                row.get(4)?,
+            ))
         })?;
         let mut result = Vec::new();
         for entry in entries {
@@ -175,7 +178,7 @@ impl Provider for PrismicProvider {
                         avatar.avatar_id,
                         avatar.avatar_name,
                         avatar.avatar_description,
-                        avatar.author_id,
+                        avatar.author_id
                     ])?;
                 }
 
@@ -211,10 +214,10 @@ impl Provider for PrismicProvider {
             let current_day = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() / (60 * 60 * 24);
             println!("Current day: {}", current_day);
             println!("Last modified: {}", last_modified_day);
-            if last_modified_day == current_day {
-                println!("Database is up-to-date, skipping update.");
-                return;
-            }
+            // if last_modified_day == current_day {
+            //     println!("Database is up-to-date, skipping update.");
+            //     return;
+            // }
         }
         let db = get_prismic_database().await;
         println!("Adding {} entries to the database...", db.len());
@@ -223,7 +226,7 @@ impl Provider for PrismicProvider {
         let entries = self.get_entries().await.unwrap();
         let unique_entries: Vec<DatabaseEntry> = db
            .into_iter()
-           .filter(|entry| !entries.iter().any(|e| e.avatar_id == entry.avatar_id))
+           .filter(|entry| !entries.iter().any(|e| e.0.avatar_id == entry.avatar_id))
            .collect();
         println!("Adding {} new entries to the database...", unique_entries.len());
         self.add_entries(unique_entries).await.unwrap();

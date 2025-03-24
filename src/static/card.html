@@ -23,21 +23,23 @@
     <div class="flex items-center justify-end rounded-b-2xl gap-2 p-2 card-content" id="{{avatar_id}}">
         <button onclick="(async (element) => {
                     element.disabled = true;
+                    const star = element.children[0];
+                    console.log(star.style.color)
+                    const is_favorite = star.style.color === 'yellow'
+                    star.style.color = is_favorite ? 'white' : 'yellow';
                     fetch('/api/favorite/' + element.parentElement.id, {
-                        method: 'POST'
+                        method: is_favorite ? 'DELETE' : 'POST',
                     }).then(response => {
                         element.disabled = false;
                         if (!response.ok) {
+                            star.style.color = !is_favorite ? 'white' : 'yellow';
                             console.error('Error:', response.statusText);
-                            return;
                         }
-                        element.fill = 'yellow';
-                        element.stroke = 'yellow';
                     }).catch(error => {
                         console.error(error);
                     });
                 })(this)" class="inline-flex items-center justify-center text-sm shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-lg border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 h-9 w-9">
-            <i class="fas fa-star size-3.5" style="font-size: 1em;"></i>
+            <i class="fas fa-star size-3.5" style="font-size: 1em; color: {{star_color}}"></i>
         </button>
         <button onclick="(async (element) => {
                     fetch('/api/avatar/equip/' + element.parentElement.id, {

@@ -7,7 +7,7 @@ use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use crate::cache::db::CONN;
 
-static AVATAR_REGEX: Lazy<Regex> = lazy_regex!(r"avtr_\w{8}-\w{4}-\w{4}-\w{4}-\w{12}");
+pub static AVATAR_REGEX: Lazy<Regex> = lazy_regex!(r"avtr_\w{8}-\w{4}-\w{4}-\w{4}-\w{12}");
 
 pub fn get_cache_path() -> String {
     let app_data = env::var("APPDATA").expect("APPDATA environment variable not set");
@@ -44,21 +44,27 @@ pub async fn cache_avatars(map: &HashMap<String, String>) -> Result<(), rusqlite
     Ok(())
 }
 
-pub async fn get_cached_ids() -> Result<HashMap<String, String>, rusqlite::Error> {
+pub async fn get_cached_ids() -> Result<HashMap<String, (String, String)>, rusqlite::Error> {
     let conn = CONN.lock().await;
-    let mut stmt = conn.prepare("SELECT key, value FROM dir_to_id")?;
+    let mut stmt = conn.prepare("SELECT * FROM dir_to_id")?;
     let mut rows = stmt.query_map([], |row| {
-        Ok((row.get::<usize, String>(0)?, row.get::<usize, String>(1)?))
+        let path: String = row.get(1)?;
+        let avatar_id: String = row.get(2)?;
+        let insertion_timestamp: String = row.get(3)?;
+
+        Ok((path, avatar_id, insertion_timestamp))
     })?;
 
-    let mut hashmap: HashMap<String, String> = HashMap::new();
+    let mut hashmap: HashMap<String, (String, String)> = HashMap::new();
     while let Some(row) = rows.next().transpose()? {
-        let (key, value) = row;
-        hashmap.insert(key, value);
+        let (path, avatar_id, insertion_timestamp) = row;
+        hashmap.insert(path, (avatar_id, insertion_timestamp));
     }
 
     Ok(hashmap)
 }
+
+
 /// Returns a list of all avatar ids in the specified file.
 /// This allows for scraping of databases and the cache via a single function.
 #[allow(dead_code)]

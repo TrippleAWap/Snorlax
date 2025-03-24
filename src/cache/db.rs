@@ -15,7 +15,7 @@ pub async fn init_db(table: &str) -> Result<()> {
             key TEXT UNIQUE NOT NULL,
             value TEXT NOT NULL,
 
-            insertion_timestamp TEXT DEFAULT CURRENT_TIMESTAMP
+            timestamp TEXT DEFAULT CURRENT_TIMESTAMP
         )", table),
         params![],
     ).expect("Error creating {} table");

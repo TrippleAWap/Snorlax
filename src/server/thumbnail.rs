@@ -19,14 +19,10 @@ pub async fn handle_thumbnail(
         .header("Upgrade-Insecure-Requests", "1")
         .send()
         .await
-        .map_err(|e| {
-            println!("Error: {}", e);
-            warp::reject::not_found()
-        })?;
+        .map_err(|_| warp::reject::reject())?;
 
     // Ensure that the status code is OK.
     if response.status() != reqwest::StatusCode::OK {
-        println!("Error: {}", response.status());
         return Err(warp::reject::not_found());
     }
 
@@ -40,10 +36,7 @@ pub async fn handle_thumbnail(
         .header("Content-Type", "image/png")
         .header("Cache-Control", "max-age=31536000")
         .body(bytes)
-        .map_err(|e| {
-            println!("Error: {}", e);
-            warp::reject::not_found()
-        })?;
+        .map_err(|_| warp::reject::reject())?;
 
     Ok(response)
 }

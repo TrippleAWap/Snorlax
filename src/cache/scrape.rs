@@ -5,7 +5,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use log::info;
 use rusqlite::params;
-use crate::cache::cache_windows_player::{cache_ids, get_avatar_ids, get_cache_path, get_cached_ids, walk_dir};
+use crate::cache::cache_windows_player::{cache_ids, get_avatar_ids, get_cache_path, get_cached_ids, walk_dir, AVATAR_REGEX};
 use crate::cache::db::CONN;
 use crate::cache::download_avatars::download_avatars;
 use notify::{Config, Event, PollWatcher, RecursiveMode, Watcher};
@@ -15,11 +15,35 @@ pub const SCRAPING_THREADS: usize = 10; // maximum number of threads used to scr
 pub const MIN_PER_THREAD: usize = 25; // minimum number of files a thread is allowed to scrape.
 
 pub async fn scrape() -> Result<HashMap<String, String>, rusqlite::Error> {
-    let ids = scrape_avatar_ids().await?;
+    let ids_quick = scrape_local_avatar_data(&get_cache_path()).await.expect("Error scraping local avatar data");
+    info!("Scraped {} avatar ids ( quick )", ids_quick.len());
+    let mut ids = scrape_avatar_ids().await?;
+    info!("Scraped {} avatar ids ( slow )", ids.len());
+    // combine ids;
+    ids.extend(ids_quick);
     info!("Scraped {} avatar ids", ids.len());
+    process_avatars(std::env::var("AUTH_TOKEN").ok(), ids.clone()).await?;
     Ok(ids)
 }
 
+async fn scrape_local_avatar_data(path: &str) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    let mut ids = HashMap::new();
+    let paths = walk_dir(path, true, 4, |path| {
+        path.contains("avtr_")
+    }, None).await;
+    for path in paths {
+        let avatar_id = match AVATAR_REGEX.captures(path.as_str()) {
+            Some(caps) => caps.get(0).unwrap().as_str().to_string(),
+            None => continue,
+        };
+        if ids.contains_key(&avatar_id) {
+            continue;
+        }
+        println!("Scraping {}", avatar_id);
+        ids.insert(avatar_id.clone(), avatar_id);
+    }
+    Ok(ids)
+}
 pub async fn process_avatars(auth_cookie: Option<String>, ids: HashMap<String, String>) -> Result<HashMap<String, String>, rusqlite::Error> {
     if let Some(cookie) = auth_cookie {
         info!("Using auth cookie: {}", cookie);
@@ -80,7 +104,7 @@ async fn scrape_avatar_ids() -> Result<HashMap<String, String>, rusqlite::Error>
     let mut paths = paths.into_iter().filter(|path| {
         let id = cached_ids.get(path);
         if !id.is_none() {
-            all_cached_ids.insert(path.clone(), id.unwrap().to_string());
+            all_cached_ids.insert(path.clone(), id.unwrap().0.to_string());
             return false;
         };
         true
@@ -100,7 +124,7 @@ async fn scrape_avatar_ids() -> Result<HashMap<String, String>, rusqlite::Error>
             info!("Scraped {} ids from paths", ids_.len());
             let mut ids = ids_clone.lock().await;
             info!("Extending ids with {} ids", ids_.len());
-            // tokio::spawn(process_avatars(std::env::var("AUTH_TOKEN").ok(), ids_.clone()));
+            tokio::spawn(process_avatars(std::env::var("AUTH_TOKEN").ok(), ids_.clone()));
             ids.extend(ids_);
         }));
     }

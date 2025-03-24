@@ -44,7 +44,7 @@ pub async fn unfavorite_avatar_id(avatar_id: String) -> Result<(), Error> {
     let conn = CONN.lock().await;
 
     conn.execute(
-        "DELETE FROM avatar_favorites WHERE key = ?",
+        "UPDATE avatar_cache SET value = json_set(value, '$.is_favorite', false) WHERE key = ?",
         params![avatar_id],
     )?;
 
@@ -54,15 +54,15 @@ pub async fn unfavorite_avatar_id(avatar_id: String) -> Result<(), Error> {
 pub async fn favorite_avatar_id(avatar_id: String) -> Result<(), Error> {
     let conn = CONN.lock().await;
 
-    let avatar_data = conn.query_row(
+    let _ = conn.query_row(
         "SELECT * FROM avatar_cache WHERE key = ? LIMIT 1",
         params![avatar_id],
         |row| {
             Ok((row.get::<_, i32>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?))
         })?;
     conn.execute(
-        "INSERT INTO avatar_favorites (key, value) VALUES (?,?)",
-        params![avatar_data.1, avatar_data.2],
+        "UPDATE avatar_cache SET value = json_set(value, '$.is_favorite', true) WHERE key = ?",
+        params![avatar_id],
     )?;
 
     Ok(())

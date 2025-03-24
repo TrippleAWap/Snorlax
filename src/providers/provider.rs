@@ -15,7 +15,7 @@ pub struct DatabaseEntry {
 pub trait Provider: Debug {
     async fn on_start(&self) -> ();
     fn database_connection(&self) -> &Mutex<Connection>;
-    async fn get_entries(&self) -> Result<Vec<DatabaseEntry>, rusqlite::Error>;
+    async fn get_entries(&self) -> Result<Vec<(DatabaseEntry, String)>, rusqlite::Error>;
     async fn add_entries(&self, entries: Vec<DatabaseEntry>) -> Result<(), rusqlite::Error>;
     async fn spawn_thread(&self) -> (); // this should be called once per provider instance
 }
