@@ -57,7 +57,12 @@ async fn latest_version() -> Result<String, Box<dyn std::error::Error>> {
     Ok(paths[paths.len()-1].to_string())
 }
 
+
 async fn auto_update() -> Result<bool, Box<dyn std::error::Error>> {
+    #[cfg(debug_assertions)]
+    {
+        return Ok(false);
+    }
     let latest_version = latest_version().await?;
     let download_url = format!("https://github.com/TrippleAWap/Snorlax/releases/download/{}/update.exe", latest_version);
     let res = reqwest::get(&download_url).await?;

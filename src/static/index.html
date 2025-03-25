@@ -259,6 +259,13 @@
                     </a>
                     <a href="#"
                        class="nav-link text-foreground/70 block px-3 py-2 rounded-md hover:text-white flex items-center space-x-2"
+                       data-title="Databases" data-icon="fas fa-database">
+                        <i class="fas fa-database w-[1em] h-[1em] mr-1"></i>
+                        <span class="font-medium">Databases</span>
+                        <span class="text-xs flex-1 text-right" id="avatar_count_databases">0</span>
+                    </a>
+                    <a href="#"
+                       class="nav-link text-foreground/70 block px-3 py-2 rounded-md hover:text-white flex items-center space-x-2"
                        data-title="Favorites" data-icon="fas fa-star">
                         <i class="fas fa-star w-[1em] h-[1em] mr-1"></i>
                         <span class="font-medium">Favorites</span>
@@ -355,16 +362,8 @@
                     link.classList.add('active');
 
                     const titleText = link.getAttribute('data-title') || 'Overview';
-                    let iconClass = '';
-
-                    if (titleText === 'Overview') {
-                        iconClass = 'fas fa-chart-area';
-                    } else if (titleText === 'Favorites') {
-                        iconClass = 'fas fa-star';
-                    } else {
-                        iconClass = 'fas fa-home';
-                    }
-
+                    let iconClass = link.getAttribute('data-icon') || 'fas fa-home';
+                        
                     containerTitle.textContent = titleText;
                     containerIcon.innerHTML = `<i class="${iconClass} text-[var(--text-color)]"></i>`;
                 });

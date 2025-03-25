@@ -36,7 +36,14 @@ const toggleFavorites = async (state) => {
         body: state.toString()
     }).then(r => console.log(r.body));
 }
-
+let database_usage = false;
+const toggleDatabaseUsage = async (state) => {
+    database_usage = state;
+    await fetch("/api/database_usage", {
+        method: "POST",
+        body: state.toString()
+    }).then(r => console.log(r.body));
+}
 const updatePageNumber = (current) => {
     current = Math.max(0, Math.min(current, window.pages));
     window.page = current;
@@ -166,11 +173,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             link.dataset.disabled = "true";
             switch (link.dataset.title) {
                 case "Overview":
+                    await toggleDatabaseUsage(false);
                     await toggleFavorites(false);
                     fetchAvatars(ws);
                     break;
                 case "Favorites":
+                    await toggleDatabaseUsage(false);
                     await toggleFavorites(true);
+                    fetchAvatars(ws);
+                    break;
+                case "Databases":
+                    await toggleFavorites(false);
+                    await toggleDatabaseUsage(true);
                     fetchAvatars(ws);
                     break;
                 default:
