@@ -1,4 +1,3 @@
-#![windows_subsystem = "windows"]
 use std::env;
 use std::env::args;
 use std::process::exit;
@@ -61,7 +60,7 @@ async fn latest_version() -> Result<String, Box<dyn std::error::Error>> {
 async fn auto_update() -> Result<bool, Box<dyn std::error::Error>> {
     #[cfg(debug_assertions)]
     {
-        return Ok(false);
+        return Err("Auto-update not supported in debug mode".into())
     }
     let latest_version = latest_version().await?;
     let download_url = format!("https://github.com/TrippleAWap/Snorlax/releases/download/{}/update.exe", latest_version);

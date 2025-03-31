@@ -180,6 +180,7 @@
 
         .pagination {
             display: flex;
+            position: absolute;
             align-items: center;
             justify-content: center;
             gap: 8px;
@@ -213,7 +214,7 @@
         </div>
         <hr class="py-2 border-none">
         <a target="_blank" rel="noopener noreferrer" class="border-zinc-900 mt-4 duration-300 hover:bg-opacity-80"
-           href="https://discord.gg/bourbon">
+           href="https://discord.gg/Kt2uTU87BY">
             <button class="text-white relative overflow-hidden bg-transparent p-[1px] text-xl"
                     style="border-radius:1rem; width: 100%;">
                 <div class="border-transparent absolute inset-0" style="border-radius:calc(1rem * 0.96)">
@@ -292,7 +293,7 @@
 
     <div class="flex-1 main-content">
         <div
-                class="mt-4 bg-[#0B0B0B] border-zinc-900 border rounded-2xl p-7 selection:bg-[var(--theme-500)] shadow-lg shadow-black backdrop-blur-lg min-h-screen">
+                class="mt-4 bg-[#0B0B0B] border-zinc-900 border rounded-2xl p-7 selection:bg-[var(--theme-500)] shadow-lg shadow-black backdrop-blur-lg flex flex-col min-h-screen">
             <div class="flex items-center mb-4">
                 <div class="mr-2">
                     <div id="container-icon" class="mb-2"
@@ -319,36 +320,44 @@
             </div>
             <div class="pagination">
                 <a href="#" data-direction="first"
-                   class="inline-flex items-center text-xs shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 rounded-full"><svg
-                        stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
-                        stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" height="1em"
-                        width="1em" xmlns="http://www.w3.org/2000/svg">
-                    <path d="m17 18-6-6 6-6"></path>
-                    <path d="M7 6v12"></path>
-                </svg></a>
+                   class="inline-flex items-center text-xs shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 rounded-full">
+                    <svg
+                            stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" height="1em"
+                            width="1em" xmlns="http://www.w3.org/2000/svg">
+                        <path d="m17 18-6-6 6-6"></path>
+                        <path d="M7 6v12"></path>
+                    </svg>
+                </a>
                 <a href="#" data-direction="prev"
                    class="inline-flex items-center text-xs shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 rounded-full"
-                   disabled><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
-                                 stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" height="1em"
-                                 width="1em" xmlns="http://www.w3.org/2000/svg">
-                    <path d="m15 18-6-6 6-6"></path>
-                </svg></a>
-                <span class="text-white" id="page_number">Page 1 of 6</span>
+                   disabled>
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
+                         stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" height="1em"
+                         width="1em" xmlns="http://www.w3.org/2000/svg">
+                        <path d="m15 18-6-6 6-6"></path>
+                    </svg>
+                </a>
+                <span class="text-white" id="page_number">Page 1 of 1</span>
                 <a href="#" data-direction="next"
-                   class="inline-flex items-center text-xs shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 rounded-full"><svg
-                        stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
-                        stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" height="1em"
-                        width="1em" xmlns="http://www.w3.org/2000/svg">
-                    <path d="m9 18 6-6-6-6"></path>
-                </svg></a>
+                   class="inline-flex items-center text-xs shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 rounded-full">
+                    <svg
+                            stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" height="1em"
+                            width="1em" xmlns="http://www.w3.org/2000/svg">
+                        <path d="m9 18 6-6-6-6"></path>
+                    </svg>
+                </a>
                 <a href="#" data-direction="last"
-                   class="inline-flex items-center text-sm shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 rounded-full"><svg
-                        stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
-                        stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" height="1em"
-                        width="1em" xmlns="http://www.w3.org/2000/svg">
-                    <path d="m7 18 6-6-6-6"></path>
-                    <path d="M17 6v12"></path>
-                </svg></a>
+                   class="inline-flex items-center text-sm shadow-md gap-2 whitespace-nowrap justify-center duration-300 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-white/10 bg-neutral-900 text-neutral-50 hover:bg-neutral-800 hover:border-neutral-700 size-9 shrink-0 rounded-full">
+                    <svg
+                            stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
+                            stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" height="1em"
+                            width="1em" xmlns="http://www.w3.org/2000/svg">
+                        <path d="m7 18 6-6-6-6"></path>
+                        <path d="M17 6v12"></path>
+                    </svg>
+                </a>
             </div>
         </div>
         <script>
@@ -362,8 +371,16 @@
                     link.classList.add('active');
 
                     const titleText = link.getAttribute('data-title') || 'Overview';
-                    let iconClass = link.getAttribute('data-icon') || 'fas fa-home';
-                        
+                    let iconClass = '';
+
+                    if (titleText === 'Overview') {
+                        iconClass = 'fas fa-chart-area';
+                    } else if (titleText === 'Favorites') {
+                        iconClass = 'fas fa-star';
+                    } else {
+                        iconClass = 'fas fa-home';
+                    }
+
                     containerTitle.textContent = titleText;
                     containerIcon.innerHTML = `<i class="${iconClass} text-[var(--text-color)]"></i>`;
                 });

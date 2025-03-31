@@ -8,6 +8,7 @@ pub mod cache_windows_player;
 pub mod db;
 pub mod scrape;
 pub mod download_avatars;
+mod amplitude_cache;
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     println!("Cache module running...");
@@ -25,6 +26,10 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     //
     // the watcher is used to process avatars as they are added to the cache. ( small amount over long period of time )
     let path_to_id = scrape().await.expect("Error scraping data");
+    //
+
+    // all code below is old and wont work anymore due to cache encrytion.
+    return Ok(());
     // TODO: this is slow and seems to be batched, figure out how to fix it. ( even if its a bit less optimized )
     let watcher = watch(get_cache_path())?;
     let (_tx, rx, _) = watcher;

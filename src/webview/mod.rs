@@ -3,6 +3,7 @@ pub mod login;
 use once_cell::unsync::OnceCell;
 use std::env::args;
 use std::mem;
+use std::process::exit;
 use std::rc::Rc;
 use tempfile::TempDir;
 use webview2::Controller;
@@ -83,6 +84,7 @@ pub async fn run(port: u16) -> Result<(), Box<dyn std::error::Error>> {
                         webview_host.close().expect("close");
                     }
                     *control_flow = ControlFlow::Exit;
+                    exit(0);
                 }
                 // Notify the webview when the parent window is moved.
                 WindowEvent::Moved(_) => {

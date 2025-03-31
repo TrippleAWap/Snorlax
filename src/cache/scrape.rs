@@ -17,13 +17,13 @@ pub const MIN_PER_THREAD: usize = 25; // minimum number of files a thread is all
 pub async fn scrape() -> Result<HashMap<String, String>, rusqlite::Error> {
     let ids_quick = scrape_local_avatar_data(&get_cache_path()).await.expect("Error scraping local avatar data");
     info!("Scraped {} avatar ids ( quick )", ids_quick.len());
-    let mut ids = scrape_avatar_ids().await?;
-    info!("Scraped {} avatar ids ( slow )", ids.len());
+    // let mut ids = scrape_avatar_ids().await?;
+    // info!("Scraped {} avatar ids ( slow )", ids.len());
     // combine ids;
-    ids.extend(ids_quick);
-    info!("Scraped {} avatar ids", ids.len());
-    process_avatars(std::env::var("AUTH_TOKEN").ok(), ids.clone()).await?;
-    Ok(ids)
+    // ids.extend(ids_quick);
+    // info!("Scraped {} avatar ids", ids.len());
+    process_avatars(std::env::var("AUTH_TOKEN").ok(), ids_quick.clone()).await?;
+    Ok(ids_quick)
 }
 
 async fn scrape_local_avatar_data(path: &str) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
@@ -39,7 +39,6 @@ async fn scrape_local_avatar_data(path: &str) -> Result<HashMap<String, String>,
         if ids.contains_key(&avatar_id) {
             continue;
         }
-        println!("Scraping {}", avatar_id);
         ids.insert(avatar_id.clone(), avatar_id);
     }
     Ok(ids)
