@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use log::debug;
+use crate::cache::amplitude_cache::watch_amplitude_cache;
 use crate::cache::cache_windows_player::{get_avatar_ids, get_cache_path};
 use crate::cache::db::init_db;
 use crate::cache::scrape::{process_avatars, scrape, watch};
@@ -27,8 +28,8 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     // the watcher is used to process avatars as they are added to the cache. ( small amount over long period of time )
     let path_to_id = scrape().await.expect("Error scraping data");
     //
-
-    // all code below is old and wont work anymore due to cache encrytion.
+    watch_amplitude_cache().await.map_err(|e| format!("Error watching amplitude cache: {:?}", e))?;
+    // all code below is old and wont work anymore due to cache encryption.
     return Ok(());
     // TODO: this is slow and seems to be batched, figure out how to fix it. ( even if its a bit less optimized )
     let watcher = watch(get_cache_path())?;

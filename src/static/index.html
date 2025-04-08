@@ -180,9 +180,9 @@
 
         .pagination {
             display: flex;
-            position: absolute;
             align-items: center;
             justify-content: center;
+            position: absolute;
             gap: 8px;
             align-self: center;
         }
@@ -214,7 +214,7 @@
         </div>
         <hr class="py-2 border-none">
         <a target="_blank" rel="noopener noreferrer" class="border-zinc-900 mt-4 duration-300 hover:bg-opacity-80"
-           href="https://discord.gg/Kt2uTU87BY">
+           href="https://discord.gg/kKSuPHzpgM">
             <button class="text-white relative overflow-hidden bg-transparent p-[1px] text-xl"
                     style="border-radius:1rem; width: 100%;">
                 <div class="border-transparent absolute inset-0" style="border-radius:calc(1rem * 0.96)">
@@ -385,6 +385,33 @@
                     containerIcon.innerHTML = `<i class="${iconClass} text-[var(--text-color)]"></i>`;
                 });
             });
+        </script>
+        <!-- Popup Container -->
+        <div id="popup" class="popup-container fixed z-10 overflow-y-auto flex items-center hidden"
+             style="top: 1.75rem; right: 2.5rem;">
+            <div class="text-white rounded-lg p-4 shadow-lg max-w-[30rem] w-full"
+                 style="background: color-mix(in srgb, var(--theme-500) 20%, var(--background) 80%);">
+                <div class="flex justify-between items-center">
+                    <div class="text-m font-bold" id="popup_title"></div>
+                    <button onclick="document.getElementById('popup').style.display='none'"
+                            class="text-white hover:text-gray-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <p class="mt-2 text-xs text-white text-center" id="popup_message"></p>
+            </div>
+        </div>
+        <script>
+            const createPopup = (title, message) => {
+                const popup = document.getElementById('popup');
+                const popupTitle = document.getElementById('popup_title');
+                const popupMessage = document.getElementById('popup_message');
+
+                popupTitle.innerHTML = title;
+                popupMessage.innerHTML = message;
+                popup.style.display = 'block';
+            };
+            createPopup('Attention', `Due to the new VRChat cache encryption <b>toggling visibility of Avatars</b> in game is required to register avatars.`)
         </script>
     </div>
 </div>
